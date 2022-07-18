@@ -1,8 +1,6 @@
 # Multiplayer-Jeopardy
 
-```
-Page 1 of 2
-```
+
 # CMPT 371 Summer 2022
 
 ## Project
@@ -53,9 +51,6 @@ for all players. The objective is to deny your opponents filling the most number
 as many boxes as you can. To take over a box, you must colour the box with your pen, and at least 50 % of
 
 
-```
-Page 2 of 2
-```
 the area of the box must be coloured to be considered taken over by you. Otherwise, another player can
 try taking over the box. Once a box has been taken over by a given player, then the box turns entirely to
 the colour of the player and can no longer be taken over by any other player. At the end of the game; i.e.,
