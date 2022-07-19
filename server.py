@@ -22,7 +22,7 @@ class Server():
     def __init__(self) -> None:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.clients = []
-        self.threads = []
+        self.threads = [threading.Thread]
         self.bufferLength = BUFFER
 
     # Binds the server to the given address and start threading
@@ -39,7 +39,7 @@ class Server():
         print(addTimestamp("Connection from " + str(connection[1])))
 
         serverSocket.send(json.dumps({
-            TKN.TKN:"client_connected",
+            TKN.TKN:TKN.CLIENT_CONNECTED,
             KEY.SEND_TYPE:VAL.SERVER,
             KEY.STATUS:True,
             KEY.PLAYER_NUM:len(self.clients)
@@ -53,16 +53,21 @@ class Server():
         self.threads.append(thread)
         thread.start()
 
-        if (len(self.clients) < 2):
+        if (len(self.clients) < 3):
             self.listenForConnection()
 
     # Listens to socket on the other end
     def listeningThread(self, serverSocket: socket.socket):
-        msg = None
-        while msg != "":
+        connected = True
+        while connected:
             response = serverSocket.recv(self.bufferLength)
             log(response)
-            msg = response.decode()
+            msg = json.loads(response.decode())
+            token = msg[TKN.TKN]
+            if token == TKN.CLIENT_CLOSED:
+                serverSocket.close()
+                self.clients.remove(serverSocket)
+                connected = False
 
 
     # Sends to all connected clients
@@ -72,6 +77,13 @@ class Server():
         msg = json.dumps(msgJson).encode()
         for client in self.clients:
             client.send(msg)
+
+    def close(self):
+        for client in self.clients:
+            client.close()
+        for thread in self.threads:
+            thread.join()
+        self.socket.close()
 
 if __name__ == "__main__":
     server = Server()
