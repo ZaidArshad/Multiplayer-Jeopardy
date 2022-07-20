@@ -65,7 +65,6 @@ class GUI():
         connectionThread = threading.Thread(target=self.client.connect, args=(ADDRESS, self.loginScreen.usernameLineEdit.text()))
         self.threads.append(connectionThread)
         connectionThread.start()
-        self.goToMainScreen()
 
     # Closes the client and GUI and join all the threads
     def close(self) -> None:
@@ -91,7 +90,7 @@ class LoginScreen(QDialog):
         loadUi("ui/login.ui", self)
         self.connectButton.clicked.connect(lambda:
             gui.connect())
-        self.errorLabel.hide()
+        self.errorLabel.setText("")
         self.setFixedSize(700, 600)
 
 # Has the main screen with players and board
@@ -115,28 +114,35 @@ class Client():
     # Connects to the server, prints confirmation
     def connect(self, address: tuple[str, int], playerName: str) -> None:
         self.playerName = playerName
-        self.socket.connect(address)
-        responseJson = self.recieve()
-        self.playerNum = responseJson[KEY.PLAYER_NUM]
 
-        if responseJson[KEY.STATUS]:
-            msgJSON = {
-                TKN.TKN:TKN.PLAYER_JOIN,
-                KEY.SEND_TYPE:VAL.CLIENT,
-                KEY.PLAYER_NUM:self.playerNum,
-                KEY.PLAYER_NAME:self.playerName,
-                KEY.PLAYER_SCORE:0
-            }
-            self.socket.send(json.dumps(msgJSON).encode())
-
+        try:
+            self.socket.connect(address)
             responseJson = self.recieve()
-            self.gui.updatePlayers(responseJson)
+            self.playerNum = responseJson[KEY.PLAYER_NUM]
 
-            # Starts the thread for listening to the server
-            self.connected = True
-            listeningThread = threading.Thread(target=self.listeningThread)
-            self.gui.threads.append(listeningThread)
-            listeningThread.start()
+            if responseJson[KEY.STATUS]:
+                self.gui.goToMainScreen()
+                msgJSON = {
+                    TKN.TKN:TKN.PLAYER_JOIN,
+                    KEY.SEND_TYPE:VAL.CLIENT,
+                    KEY.PLAYER_NUM:self.playerNum,
+                    KEY.PLAYER_NAME:self.playerName,
+                    KEY.PLAYER_SCORE:0
+                }
+                self.socket.send(json.dumps(msgJSON).encode())
+
+                responseJson = self.recieve()
+                self.gui.updatePlayers(responseJson)
+
+                # Starts the thread for listening to the server
+                self.connected = True
+                listeningThread = threading.Thread(target=self.listeningThread)
+                self.gui.threads.append(listeningThread)
+                listeningThread.start()
+                self.gui.go
+                
+        except:
+            self.gui.loginScreen.errorLabel.setText("Server Error")
 
     def recieve(self) -> dict:
         response = self.socket.recv(self.bufferLength)

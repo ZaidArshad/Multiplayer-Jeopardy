@@ -36,6 +36,7 @@ class Server():
         serverSocket = connection[0]
         print(helper.addTimestamp("Connection from " + str(connection[1])))
 
+        # Sends connection confirmation 
         serverSocket.send(json.dumps({
             TKN.TKN:TKN.CLIENT_CONNECTED,
             KEY.SEND_TYPE:VAL.SERVER,
@@ -43,9 +44,9 @@ class Server():
             KEY.PLAYER_NUM:len(self.players)
         }).encode())
 
+        # Listens for player name and starts a new thread to listen to this socket
         response = serverSocket.recv(self.bufferLength)
         helper.log(response)
-        
         msgJSON = helper.loadJSON(response)
         if msgJSON[TKN.TKN] == TKN.PLAYER_JOIN:
             thread = threading.Thread(target=self.listeningThread,
@@ -57,6 +58,7 @@ class Server():
             self.sendPlayerInfo()
             thread.start()
 
+        # Keeps listening for new connections until there are 3
         if (len(self.players) < 3):
             self.listenForConnection()
 
@@ -69,10 +71,12 @@ class Server():
             msgJSON = helper.loadJSON(response)
             token = msgJSON[TKN.TKN]
 
+            # Tells all clients of a closed client
             if token == TKN.CLIENT_CLOSED:
                 self.broadcast(response.decode())
                 serverSocket.close()
                 self.players.remove(self.players[playerNum])
+                self.sendPlayerInfo()
                 connected = False
         
         self.listenForConnection()
