@@ -1,7 +1,32 @@
 [
     {
-        "token":"client_connected",
-        "status":true,
-        "player_num":0
+        "token": "client_connected",
+        "send_type": "server",
+        "status": true,
+        "player_num": 0
+    },
+    {
+        "token": "player_update",
+        "player_list": [
+            {
+                "token": "player_info",
+                "player_num": 0,
+                "player_name": "user0",
+                "player_score": 0
+            },
+            {
+                "token": "player_info",
+                "player_num": 1,
+                "player_name": "user1",
+                "player_score": 0
+            }
+        ],
+        "send_type": "broadcast"
+    },
+    {
+        "token": "client_closed",
+        "send_type": "broadcast",
+        "player_num": 0,
+        "player_name": "user0"
     }
 ]

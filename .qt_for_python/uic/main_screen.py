@@ -38,10 +38,25 @@ class Ui_Dialog(object):
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
         self.debugLabel = QtWidgets.QLabel(Dialog)
+        self.debugLabel.setMaximumSize(QtCore.QSize(700, 16777215))
         self.debugLabel.setObjectName("debugLabel")
         self.verticalLayout.addWidget(self.debugLabel)
         spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
         self.verticalLayout.addItem(spacerItem)
+        self.answerLineEdit = QtWidgets.QLineEdit(Dialog)
+        self.answerLineEdit.setMinimumSize(QtCore.QSize(0, 50))
+        self.answerLineEdit.setStyleSheet("QLineEdit { \n"
+"    background-color: white;\n"
+"    color: black;\n"
+"    border-radius: 13px;\n"
+"    font: 15pt \"Inter\";\n"
+"    margin: 0px 15px;\n"
+"    padding: 0px 15px\n"
+"}")
+        self.answerLineEdit.setObjectName("answerLineEdit")
+        self.verticalLayout.addWidget(self.answerLineEdit)
+        spacerItem1 = QtWidgets.QSpacerItem(20, 5, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Fixed)
+        self.verticalLayout.addItem(spacerItem1)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.verticalLayout_0 = QtWidgets.QVBoxLayout()
@@ -102,6 +117,7 @@ class Ui_Dialog(object):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
         self.debugLabel.setText(_translate("Dialog", "TextLabel"))
+        self.answerLineEdit.setText(_translate("Dialog", "temp name"))
         self.usernameLabel0.setText(_translate("Dialog", "usernameLabel0"))
         self.scoreLabel0.setText(_translate("Dialog", "score0"))
         self.usernameLabel1.setText(_translate("Dialog", "usernameLabel1"))

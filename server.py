@@ -78,6 +78,9 @@ class Server():
                 self.players.remove(self.players[playerNum])
                 self.sendPlayerInfo()
                 connected = False
+
+            if token == TKN.PLAYER_ANSWER:
+                self.broadcast(response.decode())
         
         self.listenForConnection()
 
