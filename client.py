@@ -1,5 +1,5 @@
 # TCP Client
-from datetime import datetime
+import helper
 import json
 import socket
 import sys
@@ -20,18 +20,8 @@ BUFFER = 1024
 # Scales the application for 4k monitors
 if hasattr(Qt, 'AA_EnableHighDpiScaling'):
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-
 if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
-
-def addTimestamp(msg: str) -> str:
-    return datetime.now().strftime("<%H:%M:%S> ") + msg
-
-def log(msg: bytes) -> str:
-    print(addTimestamp(msg.decode()))
-
-def load(msg: bytes) -> dict:
-    return json.loads(msg.decode())
 
 class GUI():
     def __init__(self) -> None:
@@ -43,10 +33,12 @@ class GUI():
         self.window = self.initializeWindow()
         self.threads = []
 
-    def goToMainScreen(self):
+    # Goes to the main screen
+    def goToMainScreen(self) -> None:
         self.window.setCurrentIndex(self.window.currentIndex() + 1)
     
-    def initializeWindow(self):
+    # Creates the window and widgets for GUI
+    def initializeWindow(self) -> QStackedWidget:
         '''
         Creates and formats a window.
         Returns: QStackedWidget to be used as window.
@@ -60,14 +52,20 @@ class GUI():
         window.show()
         return window
 
-    def connect(self):
+    def updatePlayer(self, json: dict) -> None:
+        print(json[KEY.PLAYER_NUM])
+        self.mainScreen.usernameLabels[json[KEY.PLAYER_NUM]].setText(json[KEY.PLAYER_NAME])
+        self.mainScreen.scoreLabels[json[KEY.PLAYER_NUM]].setText(str(json[KEY.PLAYER_SCORE]))
+
+    # Connects the sets up the client to the server
+    def connect(self) -> None:
         connectionThread = threading.Thread(target=self.client.connect, args=(ADDRESS, self.loginScreen.usernameLineEdit.text()))
         self.threads.append(connectionThread)
         connectionThread.start()
-        
         self.goToMainScreen()
 
-    def close(self):
+    # Closes the client and GUI and join all the threads
+    def close(self) -> None:
         msg = json.dumps({
             TKN.TKN:TKN.CLIENT_CLOSED,
             KEY.SEND_TYPE:VAL.CLIENT,
@@ -80,8 +78,10 @@ class GUI():
 
         for thread in self.threads:
             thread.join()
+        helper.log("Closing GUI".encode())
         sys.exit()
 
+# Has the screen to join the game
 class LoginScreen(QDialog):
     def __init__(self, gui):
         super(LoginScreen, self).__init__()
@@ -91,61 +91,68 @@ class LoginScreen(QDialog):
         self.errorLabel.hide()
         self.setFixedSize(700, 600)
 
+# Has the main screen with players and board
 class MainScreen(QDialog):
     def __init__(self):
         super(MainScreen, self).__init__()
-        layout = QVBoxLayout()
-        # Label
-        helloLabel = QLabel()
-        helloLabel.setText("hello")
-        # Order of widgets
-        layout.addWidget(helloLabel)
-        self.setLayout(layout)
+        loadUi("ui/main_screen.ui", self)
+        self.debugLabel.setText("TEMP_TEXT")
+        self.scoreLabels = [
+            self.scoreLabel0, self.scoreLabel1, self.scoreLabel2]
+        self.usernameLabels = [
+            self.usernameLabel0, self.usernameLabel1, self.usernameLabel2]
 
 class Client():
     def __init__(self, gui):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.gui = gui
         self.bufferLength = BUFFER
+        self.connected = False
 
     # Connects to the server, prints confirmation
     def connect(self, address: tuple[str, int], playerName: str) -> None:
         self.playerName = playerName
         self.socket.connect(address)
         response = self.socket.recv(self.bufferLength)
-        log(response)
-        responseJson = load(response)
+        helper.log(response)
+        responseJson = helper.loadJSON(response)
         self.playerNum = responseJson[KEY.PLAYER_NUM]
 
         if responseJson[KEY.STATUS]:
-            self.socket.send(json.dumps({
+            msgJSON = {
                 TKN.TKN:TKN.PLAYER_JOIN,
                 KEY.SEND_TYPE:VAL.CLIENT,
                 KEY.PLAYER_NUM:self.playerNum,
-                KEY.PLAYER_NAME:self.playerName
-            }).encode())
+                KEY.PLAYER_NAME:self.playerName,
+                KEY.PLAYER_SCORE:0
+            }
+            self.socket.send(json.dumps(msgJSON).encode())
+            self.gui.updatePlayer(msgJSON)
+            response = self.socket.recv(self.bufferLength)
+            helper.log(response)
 
-        response = self.socket.recv(self.bufferLength)
-        log(response)
-
-        listeningThread = threading.Thread(target=self.listeningThread, daemon=True)
-        gui.threads.append(listeningThread)
-        listeningThread.start()
+            # Starts the thread for listening to the server
+            self.connected = True
+            listeningThread = threading.Thread(target=self.listeningThread)
+            self.gui.threads.append(listeningThread)
+            listeningThread.start()
 
     # Listens to the server for any messages
     def listeningThread(self) -> None:
-        while True:
+        while self.connected:
             response = self.socket.recv(self.bufferLength)
-            log(response)
-            msg = response.decode()
-            if msg == "":
-                break
+            helper.log(response)
+            gui.mainScreen.debugLabel.setText(response.decode())
+            msgJSON = helper.loadJSON(response)
+
+            if msgJSON[TKN.TKN] == TKN.CLIENT_CLOSED:
+                self.connected = False
+
+            if msgJSON[TKN.TKN] == TKN.PLAYER_INFO:
+                self.gui.updatePlayer(msgJSON)
 
     def send(self, msg: str) -> None:
         self.socket.send(msg.encode())
-
-    def close(self) -> None:
-        self.socket.close()
 
 if __name__ == "__main__":
     gui = GUI()
