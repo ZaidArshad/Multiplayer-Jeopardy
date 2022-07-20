@@ -2,6 +2,8 @@
 from datetime import datetime
 import json
 import socket
+
+from numpy import broadcast
 import helper
 import threading
 from player import Player
@@ -52,8 +54,7 @@ class Server():
             player = Player(msgJSON[KEY.PLAYER_NUM], msgJSON[KEY.PLAYER_NAME], serverSocket)
             self.players.append(player)
 
-            for player in self.players:
-                self.broadcast(json.dumps(player.getJSON()))
+            self.sendPlayerInfo()
             thread.start()
 
         if (len(self.players) < 3):
@@ -84,6 +85,15 @@ class Server():
         msg = json.dumps(msgJson).encode()
         for player in self.players:
             player.socket.send(msg)
+
+    def sendPlayerInfo(self):
+        msgJSON = {
+            TKN.TKN:TKN.PLAYER_UPDATE,
+            KEY.PLAYER_LIST:[]
+        }
+        for player in self.players:
+            msgJSON[KEY.PLAYER_LIST].append(player.getJSON())
+        self.broadcast(json.dumps(msgJSON))
 
     # Closes all of the client and joins all the threads
     def close(self):

@@ -52,8 +52,11 @@ class GUI():
         window.show()
         return window
 
+    def updatePlayers(self, json: dict) -> None:
+        for player in json[KEY.PLAYER_LIST]:
+            self.updatePlayer(player)
+
     def updatePlayer(self, json: dict) -> None:
-        print(json[KEY.PLAYER_NUM])
         self.mainScreen.usernameLabels[json[KEY.PLAYER_NUM]].setText(json[KEY.PLAYER_NAME])
         self.mainScreen.scoreLabels[json[KEY.PLAYER_NUM]].setText(str(json[KEY.PLAYER_SCORE]))
 
@@ -127,9 +130,11 @@ class Client():
                 KEY.PLAYER_SCORE:0
             }
             self.socket.send(json.dumps(msgJSON).encode())
-            self.gui.updatePlayer(msgJSON)
+
             response = self.socket.recv(self.bufferLength)
             helper.log(response)
+            responseJson = helper.loadJSON(response)
+            self.gui.updatePlayers(responseJson)
 
             # Starts the thread for listening to the server
             self.connected = True
@@ -148,8 +153,9 @@ class Client():
             if msgJSON[TKN.TKN] == TKN.CLIENT_CLOSED:
                 self.connected = False
 
-            if msgJSON[TKN.TKN] == TKN.PLAYER_INFO:
-                self.gui.updatePlayer(msgJSON)
+            if msgJSON[TKN.TKN] == TKN.PLAYER_UPDATE:
+                updateThread = threading.Thread(target=self.gui.updatePlayers, args=(msgJSON, ))
+                updateThread.start()
 
     def send(self, msg: str) -> None:
         self.socket.send(msg.encode())

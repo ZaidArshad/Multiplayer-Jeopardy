@@ -1,5 +1,6 @@
 PLAYER_NUM = "player_num"
 PLAYER_NAME = "player_name"
 PLAYER_SCORE = "player_score"
+PLAYER_LIST = "player_list"
 STATUS = "status"
 SEND_TYPE = "send_type"
