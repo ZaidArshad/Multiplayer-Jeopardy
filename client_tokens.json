@@ -1,7 +1,27 @@
 [
     {
-        "token":"player_join",
-        "player_num":0,
-        "player_name":"name"
+        "token": "player_join",
+        "player_num": 0,
+        "player_name": "name"
+    },
+    {
+        "token": "player_join",
+        "send_type": "client",
+        "player_num": 0,
+        "player_name": "Temp Name",
+        "player_score": 0
+    },
+    {
+        "token": "client_closed",
+        "send_type": "client",
+        "player_num": 0,
+        "player_name": "Temp Name"
+    },
+    {
+        "token": "player_answer",
+        "send_type": "client",
+        "player_num": 0,
+        "player_name": "Temp Name",
+        "answer": "temp name"
     }
 ]
