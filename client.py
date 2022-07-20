@@ -116,9 +116,7 @@ class Client():
     def connect(self, address: tuple[str, int], playerName: str) -> None:
         self.playerName = playerName
         self.socket.connect(address)
-        response = self.socket.recv(self.bufferLength)
-        helper.log(response)
-        responseJson = helper.loadJSON(response)
+        responseJson = self.recieve()
         self.playerNum = responseJson[KEY.PLAYER_NUM]
 
         if responseJson[KEY.STATUS]:
@@ -131,9 +129,7 @@ class Client():
             }
             self.socket.send(json.dumps(msgJSON).encode())
 
-            response = self.socket.recv(self.bufferLength)
-            helper.log(response)
-            responseJson = helper.loadJSON(response)
+            responseJson = self.recieve()
             self.gui.updatePlayers(responseJson)
 
             # Starts the thread for listening to the server
@@ -142,19 +138,23 @@ class Client():
             self.gui.threads.append(listeningThread)
             listeningThread.start()
 
+    def recieve(self) -> dict:
+        response = self.socket.recv(self.bufferLength)
+        helper.log(response)
+        responseJson = helper.loadJSON(response)
+        return responseJson
+
     # Listens to the server for any messages
     def listeningThread(self) -> None:
         while self.connected:
-            response = self.socket.recv(self.bufferLength)
-            helper.log(response)
-            gui.mainScreen.debugLabel.setText(response.decode())
-            msgJSON = helper.loadJSON(response)
+            responseJSON = self.recieve()
+            gui.mainScreen.debugLabel.setText(json.dumps(responseJSON))
 
-            if msgJSON[TKN.TKN] == TKN.CLIENT_CLOSED:
+            if responseJSON[TKN.TKN] == TKN.CLIENT_CLOSED:
                 self.connected = False
 
-            if msgJSON[TKN.TKN] == TKN.PLAYER_UPDATE:
-                updateThread = threading.Thread(target=self.gui.updatePlayers, args=(msgJSON, ))
+            if responseJSON[TKN.TKN] == TKN.PLAYER_UPDATE:
+                updateThread = threading.Thread(target=self.gui.updatePlayers, args=(responseJSON, ))
                 updateThread.start()
 
     def send(self, msg: str) -> None:
