@@ -75,6 +75,18 @@ class GUI():
         self.threads.append(connectionThread)
         connectionThread.start()
 
+        # Times out after 2.00 seconds
+        ticker = 0
+        while not self.client.connected and ticker < 20:
+            ticker += 1
+            print("ticker:", ticker)
+            time.sleep(0.1)
+            pass
+        if self.client.connected:
+            self.goToMainScreen()
+        else:
+            self.loginScreen.errorLabel.setText("Server time out.")
+
     # Closes the client and GUI and join all the threads
     def close(self) -> None:
         msgJSON = {TKN.TKN:TKN.CLIENT_CLOSED}
@@ -168,7 +180,6 @@ class Client():
                     KEY.PLAYER_SCORE:0
                 }
                 self.socket.send(json.dumps(msgJSON).encode())
-                self.gui.goToMainScreen()
 
                 responseJson = self.recieve()
                 self.gui.updatePlayers(responseJson)
