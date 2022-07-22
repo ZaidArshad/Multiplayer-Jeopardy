@@ -1,4 +1,5 @@
 # TCP Client
+import time
 import helper
 import json
 import socket
@@ -65,17 +66,14 @@ class GUI():
 
     # Updates a single player
     def updatePlayer(self, json: dict) -> None:
-        self.mainScreen.usernameLabels[json[KEY.PLAYER_NUM]].setText(json[KEY.PLAYER_NAME])
-        self.mainScreen.scoreLabels[json[KEY.PLAYER_NUM]].setText(str(json[KEY.PLAYER_SCORE]))
+        self.mainScreen.playerCards[json[KEY.PLAYER_NUM]].widget.nameLabel.setText(json[KEY.PLAYER_NAME])
+        self.mainScreen.playerCards[json[KEY.PLAYER_NUM]].widget.scoreLabel.setText(str(json[KEY.PLAYER_SCORE]))
 
     # Connects the sets up the client to the server
     def connect(self) -> None:
         connectionThread = threading.Thread(target=self.client.connect, args=(ADDRESS, self.loginScreen.usernameLineEdit.text()))
         self.threads.append(connectionThread)
         connectionThread.start()
-        while not self.client.connected:
-            pass
-        self.goToMainScreen()
 
     # Closes the client and GUI and join all the threads
     def close(self) -> None:
@@ -106,15 +104,41 @@ class MainScreen(QDialog):
         loadUi("ui/main_screen.ui", self)
         self.gui = gui
         self.debugLabel.setText("TEMP_TEXT")
-        self.scoreLabels = [
-            self.scoreLabel0, self.scoreLabel1, self.scoreLabel2]
-        self.usernameLabels = [
-            self.usernameLabel0, self.usernameLabel1, self.usernameLabel2]
+        self.playerCards = [
+            PlayerCard(self,  21, 520, "#FF4B4B"),
+            PlayerCard(self,  251, 520, "#F36CFF"),
+            PlayerCard(self,  480, 520, "#6FD966")
+        ]
 
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key_Enter, Qt.Key_Return):
             self.gui.submitAnswer()
         event.accept()
+
+class PlayerCard():
+    def __init__(self, parent: QDialog, x: int, y: int, color: str):
+        self.widget = QWidget(parent)
+        self.color = color
+        self.widget.move(x, y)
+        self.widget.resize(200, 100)
+        layout = QVBoxLayout(self.widget)
+        self.widget.setStyleSheet("QWidget {"
+        "   background: " + color + ";"
+        "   border-radius: 15px;k;"
+        "}")
+        self.widget.nameLabel = QLabel()
+        self.widget.nameLabel.setStyleSheet("QLabel {"
+        "   color: white;"
+        "   font: 25px \"Inter\";"
+        "}")
+        self.widget.scoreLabel = QLabel()
+        self.widget.scoreLabel.setStyleSheet("QLabel {"
+        "   color: white;"
+        "   font: 20px \"Inter\";"
+        "}")
+        layout.addWidget(self.widget.nameLabel, 0, Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.widget.scoreLabel, 0, Qt.AlignmentFlag.AlignCenter)
+        layout.addItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
 
 
 # Controls the GUI <-> Client <-> Server connection
@@ -144,6 +168,7 @@ class Client():
                     KEY.PLAYER_SCORE:0
                 }
                 self.socket.send(json.dumps(msgJSON).encode())
+                self.gui.goToMainScreen()
 
                 responseJson = self.recieve()
                 self.gui.updatePlayers(responseJson)
@@ -155,7 +180,8 @@ class Client():
                 listeningThread.start()
 
         # Prompt error on failure to connect      
-        except:
+        except Exception as e:
+            print(e)
             self.gui.loginScreen.errorLabel.setText("Server Error")
 
     # Listens to the server for a block of data

@@ -55,59 +55,10 @@ class Ui_Dialog(object):
 "}")
         self.answerLineEdit.setObjectName("answerLineEdit")
         self.verticalLayout.addWidget(self.answerLineEdit)
-        spacerItem1 = QtWidgets.QSpacerItem(20, 5, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Fixed)
+        spacerItem1 = QtWidgets.QSpacerItem(20, 80, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Fixed)
         self.verticalLayout.addItem(spacerItem1)
-        self.horizontalLayout = QtWidgets.QHBoxLayout()
-        self.horizontalLayout.setObjectName("horizontalLayout")
-        self.verticalLayout_0 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_0.setObjectName("verticalLayout_0")
-        self.usernameLabel0 = QtWidgets.QLabel(Dialog)
-        self.usernameLabel0.setStyleSheet("QLabel { \n"
-"    color: white;\n"
-"    font: 15pt \"Inter\";\n"
-"    margin: 0px 10px;\n"
-"}")
-        self.usernameLabel0.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        self.usernameLabel0.setObjectName("usernameLabel0")
-        self.verticalLayout_0.addWidget(self.usernameLabel0)
-        self.scoreLabel0 = QtWidgets.QLabel(Dialog)
-        self.scoreLabel0.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        self.scoreLabel0.setObjectName("scoreLabel0")
-        self.verticalLayout_0.addWidget(self.scoreLabel0)
-        self.horizontalLayout.addLayout(self.verticalLayout_0)
-        self.verticalLayout_1 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_1.setObjectName("verticalLayout_1")
-        self.usernameLabel1 = QtWidgets.QLabel(Dialog)
-        self.usernameLabel1.setStyleSheet("QLabel { \n"
-"    color: white;\n"
-"    font: 15pt \"Inter\";\n"
-"    margin: 0px 10px;\n"
-"}")
-        self.usernameLabel1.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        self.usernameLabel1.setObjectName("usernameLabel1")
-        self.verticalLayout_1.addWidget(self.usernameLabel1)
-        self.scoreLabel1 = QtWidgets.QLabel(Dialog)
-        self.scoreLabel1.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        self.scoreLabel1.setObjectName("scoreLabel1")
-        self.verticalLayout_1.addWidget(self.scoreLabel1)
-        self.horizontalLayout.addLayout(self.verticalLayout_1)
-        self.verticalLayout_3 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_3.setObjectName("verticalLayout_3")
-        self.usernameLabel2 = QtWidgets.QLabel(Dialog)
-        self.usernameLabel2.setStyleSheet("QLabel { \n"
-"    color: white;\n"
-"    font: 15pt \"Inter\";\n"
-"    margin: 0px 10px;\n"
-"}")
-        self.usernameLabel2.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        self.usernameLabel2.setObjectName("usernameLabel2")
-        self.verticalLayout_3.addWidget(self.usernameLabel2)
-        self.scoreLabel2 = QtWidgets.QLabel(Dialog)
-        self.scoreLabel2.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        self.scoreLabel2.setObjectName("scoreLabel2")
-        self.verticalLayout_3.addWidget(self.scoreLabel2)
-        self.horizontalLayout.addLayout(self.verticalLayout_3)
-        self.verticalLayout.addLayout(self.horizontalLayout)
+        spacerItem2 = QtWidgets.QSpacerItem(20, 5, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Fixed)
+        self.verticalLayout.addItem(spacerItem2)
         self.verticalLayout_2.addLayout(self.verticalLayout)
 
         self.retranslateUi(Dialog)
@@ -118,9 +69,3 @@ class Ui_Dialog(object):
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
         self.debugLabel.setText(_translate("Dialog", "TextLabel"))
         self.answerLineEdit.setText(_translate("Dialog", "temp name"))
-        self.usernameLabel0.setText(_translate("Dialog", "usernameLabel0"))
-        self.scoreLabel0.setText(_translate("Dialog", "score0"))
-        self.usernameLabel1.setText(_translate("Dialog", "usernameLabel1"))
-        self.scoreLabel1.setText(_translate("Dialog", "score1"))
-        self.usernameLabel2.setText(_translate("Dialog", "usernameLabel2"))
-        self.scoreLabel2.setText(_translate("Dialog", "score2"))

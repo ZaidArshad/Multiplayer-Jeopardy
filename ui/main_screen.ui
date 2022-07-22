@@ -130,6 +130,22 @@
       </widget>
      </item>
      <item>
+      <spacer name="playerVerticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>80</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
       <spacer name="verticalSpacer">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
@@ -144,103 +160,6 @@
         </size>
        </property>
       </spacer>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <layout class="QVBoxLayout" name="verticalLayout_0">
-         <item>
-          <widget class="QLabel" name="usernameLabel0">
-           <property name="styleSheet">
-            <string notr="true">QLabel { 
-	color: white;
-	font: 15pt &quot;Inter&quot;;
-	margin: 0px 10px;
-}</string>
-           </property>
-           <property name="text">
-            <string>usernameLabel0</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="scoreLabel0">
-           <property name="text">
-            <string>score0</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QVBoxLayout" name="verticalLayout_1">
-         <item>
-          <widget class="QLabel" name="usernameLabel1">
-           <property name="styleSheet">
-            <string notr="true">QLabel { 
-	color: white;
-	font: 15pt &quot;Inter&quot;;
-	margin: 0px 10px;
-}</string>
-           </property>
-           <property name="text">
-            <string>usernameLabel1</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="scoreLabel1">
-           <property name="text">
-            <string>score1</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QVBoxLayout" name="verticalLayout_3">
-         <item>
-          <widget class="QLabel" name="usernameLabel2">
-           <property name="styleSheet">
-            <string notr="true">QLabel { 
-	color: white;
-	font: 15pt &quot;Inter&quot;;
-	margin: 0px 10px;
-}</string>
-           </property>
-           <property name="text">
-            <string>usernameLabel2</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="scoreLabel2">
-           <property name="text">
-            <string>score2</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
      </item>
     </layout>
    </item>
