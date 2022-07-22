@@ -76,6 +76,7 @@ class Server():
                 self.broadcast(response.decode())
                 serverSocket.close()
                 self.players.remove(self.players[playerNum])
+                self.reAssignPlayerNumbers()
                 self.sendPlayerInfo()
                 connected = False
 
@@ -101,6 +102,12 @@ class Server():
         for player in self.players:
             msgJSON[KEY.PLAYER_LIST].append(player.getJSON())
         self.broadcast(json.dumps(msgJSON))
+
+    def reAssignPlayerNumbers(self):
+        num = 0
+        for player in self.players:
+            player.num = num
+            num += 1
 
     # Closes all of the client and joins all the threads
     def close(self):

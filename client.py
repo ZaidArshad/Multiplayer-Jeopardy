@@ -64,13 +64,21 @@ class GUI():
         for player in json[KEY.PLAYER_LIST]:
             self.updatePlayer(player)
 
+        numOfPlayers = len(json[KEY.PLAYER_LIST])
+        for i in range(2, numOfPlayers-1, -1):
+            self.mainScreen.playerCards[i].clear()
+
     # Updates a single player
     def updatePlayer(self, json: dict) -> None:
         self.mainScreen.playerCards[json[KEY.PLAYER_NUM]].widget.nameLabel.setText(json[KEY.PLAYER_NAME])
-        self.mainScreen.playerCards[json[KEY.PLAYER_NUM]].widget.scoreLabel.setText(str(json[KEY.PLAYER_SCORE]))
+        self.mainScreen.playerCards[json[KEY.PLAYER_NUM]].widget.scoreLabel.setText("$"+str(json[KEY.PLAYER_SCORE])+" ")
 
     # Connects the sets up the client to the server
     def connect(self) -> None:
+        if len(self.loginScreen.usernameLineEdit.text()) == 0:
+            self.loginScreen.errorLabel.setText("Please insert a username.")
+            return
+
         connectionThread = threading.Thread(target=self.client.connect, args=(ADDRESS, self.loginScreen.usernameLineEdit.text()))
         self.threads.append(connectionThread)
         connectionThread.start()
@@ -109,6 +117,11 @@ class LoginScreen(QDialog):
         self.errorLabel.setText("")
         self.setFixedSize(700, 600)
 
+    def keyPressEvent(self, event):
+        if event.key() in (Qt.Key_Enter, Qt.Key_Return):
+            gui.connect()
+        event.accept()
+
 # Has the main screen with players and board
 class MainScreen(QDialog):
     def __init__(self, gui):
@@ -127,6 +140,7 @@ class MainScreen(QDialog):
             self.gui.submitAnswer()
         event.accept()
 
+# Has the playercard with the score and name 
 class PlayerCard():
     def __init__(self, parent: QDialog, x: int, y: int, color: str):
         self.widget = QWidget(parent)
@@ -151,6 +165,10 @@ class PlayerCard():
         layout.addWidget(self.widget.nameLabel, 0, Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.widget.scoreLabel, 0, Qt.AlignmentFlag.AlignCenter)
         layout.addItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
+
+    def clear(self) -> None:
+        self.widget.nameLabel.clear()
+        self.widget.scoreLabel.clear()
 
 
 # Controls the GUI <-> Client <-> Server connection
@@ -206,19 +224,21 @@ class Client():
     def listeningThread(self) -> None:
         while self.connected:
             responseJSON = self.recieve()
-            gui.mainScreen.debugLabel.setText(json.dumps(responseJSON))
+            gui.mainScreen.debugLabel.setText(json.dumps(responseJSON)+"\n"+gui.mainScreen.debugLabel.text())
 
             token = responseJSON[TKN.TKN]
-
-            if token == TKN.CLIENT_CLOSED:
-                self.connected = False
 
             if token == TKN.PLAYER_UPDATE:
                 updateThread = threading.Thread(target=self.gui.updatePlayers, args=(responseJSON, ))
                 updateThread.start()
 
-            if token == TKN.PLAYER_ANSWER:
-                gui.mainScreen.debugLabel.setText(responseJSON[KEY.ANSWER])
+            
+            elif token == TKN.CLIENT_CLOSED and self.playerNum == responseJSON[KEY.PLAYER_NUM]:
+                self.connected = False
+
+            elif token == TKN.PLAYER_ANSWER:
+                pass
+                #gui.mainScreen.debugLabel.setText(responseJSON[KEY.ANSWER])
 
     # Takes a message and add a header with client info and sends to server
     def send(self, msg: dict) -> None:
