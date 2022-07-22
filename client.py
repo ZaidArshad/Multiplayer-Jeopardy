@@ -73,6 +73,9 @@ class GUI():
         connectionThread = threading.Thread(target=self.client.connect, args=(ADDRESS, self.loginScreen.usernameLineEdit.text()))
         self.threads.append(connectionThread)
         connectionThread.start()
+        while not self.client.connected:
+            pass
+        self.goToMainScreen()
 
     # Closes the client and GUI and join all the threads
     def close(self) -> None:
@@ -133,7 +136,6 @@ class Client():
             self.playerNum = responseJson[KEY.PLAYER_NUM]
 
             if responseJson[KEY.STATUS]:
-                self.gui.goToMainScreen()
                 msgJSON = {
                     TKN.TKN:TKN.PLAYER_JOIN,
                     KEY.SEND_TYPE:VAL.CLIENT,
@@ -151,7 +153,6 @@ class Client():
                 listeningThread = threading.Thread(target=self.listeningThread)
                 self.gui.threads.append(listeningThread)
                 listeningThread.start()
-                self.gui.go
 
         # Prompt error on failure to connect      
         except:
