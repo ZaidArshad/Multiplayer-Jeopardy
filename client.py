@@ -42,8 +42,8 @@ class GUI():
 
     # Submits an answer to the server
     def submitAnswer(self) -> None:
-        answer = self.mainScreen.answerLineEdit.text()
-        self.mainScreen.answerLineEdit.clear()
+        answer = self.mainScreen.questionPrompt.answerLineEdit.text()
+        self.mainScreen.questionPrompt.answerLineEdit.clear()
         answerJSON = {
             TKN.TKN:TKN.PLAYER_ANSWER,
             KEY.ANSWER:answer
@@ -57,8 +57,6 @@ class GUI():
     def initializeWindow(self) -> QStackedWidget:
         window = QStackedWidget()
         window.setFixedSize(700, 600)
-        window.setAttribute(Qt.WA_StyledBackground, True)
-        window.setStyleSheet('background-color: rgb(255, 168, 119)')
         window.addWidget(self.loginScreen)
         window.addWidget(self.mainScreen)
         window.show()
@@ -136,19 +134,63 @@ class MainScreen(QDialog):
         super(MainScreen, self).__init__()
         loadUi("ui/main_screen.ui", self)
         self.gui = gui
-        self.debugLabel.setText("TEMP_TEXT")
+
+        self.widgetIndex = 0
+        self.questionPrompt = QuestionPrompt(self)
+        self.board = Board(self)
+        self.stackedWidget = QStackedWidget()
+        self.stackedWidgetHolder.addWidget(self.stackedWidget)
+        self.stackedWidget.addWidget(self.board)
+        self.stackedWidget.addWidget(self.questionPrompt)
+
+        self.debugLabel.setText("THIS IS DEBUG LOG PRESS ESCAPE TO SHOW AND HIDE")
         self.playerCards = [
             PlayerCard(self,  21, 520, "#FF4B4B"),
             PlayerCard(self,  251, 520, "#F36CFF"),
             PlayerCard(self,  480, 520, "#6FD966")
         ]
 
-    def keyPressEvent(self, event):
-        if event.key() in (Qt.Key_Enter, Qt.Key_Return):
-            self.gui.submitAnswer()
-        if event.key() == Qt.Key_Space:
+    def togglePrompt(self) -> None:
+        if self.widgetIndex:
+            self.widgetIndex = 0
+        else:
+            self.widgetIndex = 1
             self.gui.submitToken(TKN.PLAYER_BUZZ)
+        self.stackedWidget.setCurrentIndex(self.widgetIndex)
+
+    def keyPressEvent(self, event) -> None:
+        if event.key() == Qt.Key.Key_Escape:
+            if self.debugLabel.isHidden():
+                self.debugLabel.show()
+            else:
+                self.debugLabel.hide()
         event.accept()
+
+class QuestionPrompt(QWidget):
+    def __init__(self, mainscreen: MainScreen):
+        super(QuestionPrompt, self).__init__()
+        loadUi("ui/question_prompt.ui", self)
+        self.mainScreen = mainscreen
+
+    def keyPressEvent(self, event) -> None:
+        if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
+            self.mainScreen.gui.submitAnswer()
+            self.mainScreen.togglePrompt()
+        event.accept()
+
+class Board(QWidget):
+    def __init__(self, mainscreen: MainScreen):
+        super(Board, self).__init__()
+        loadUi("ui/board.ui", self)
+        self.mainScreen = mainscreen
+
+        for row in range(1, 6):
+            for col in range(0, 6):
+                button = QPushButton()
+                button.setText("$" + str(row*200))
+                button.clicked.connect(lambda: self.mainScreen.togglePrompt())
+                button.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding))
+                self.gridLayout.addWidget(button, row, col)
 
 # Has the playercard with the score and name 
 class PlayerCard():

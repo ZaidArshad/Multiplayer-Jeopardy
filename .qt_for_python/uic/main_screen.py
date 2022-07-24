@@ -57,27 +57,13 @@ class Ui_Dialog(object):
         self.debugLabel.setWordWrap(True)
         self.debugLabel.setObjectName("debugLabel")
         self.verticalLayout.addWidget(self.debugLabel)
-        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
+        self.stackedWidgetHolder = QtWidgets.QVBoxLayout()
+        self.stackedWidgetHolder.setObjectName("stackedWidgetHolder")
+        self.verticalLayout.addLayout(self.stackedWidgetHolder)
+        spacerItem = QtWidgets.QSpacerItem(20, 80, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Fixed)
         self.verticalLayout.addItem(spacerItem)
-        self.answerLineEdit = QtWidgets.QLineEdit(Dialog)
-        self.answerLineEdit.setEnabled(True)
-        self.answerLineEdit.setMinimumSize(QtCore.QSize(0, 50))
-        self.answerLineEdit.setStyleSheet("QLineEdit { \n"
-"    background-color: white;\n"
-"    color: black;\n"
-"    border-radius: 13px;\n"
-"    font: 15pt \"Inter\";\n"
-"    margin: 0px 15px;\n"
-"    padding: 0px 15px\n"
-"}")
-        self.answerLineEdit.setText("")
-        self.answerLineEdit.setMaxLength(100)
-        self.answerLineEdit.setObjectName("answerLineEdit")
-        self.verticalLayout.addWidget(self.answerLineEdit)
-        spacerItem1 = QtWidgets.QSpacerItem(20, 80, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Fixed)
+        spacerItem1 = QtWidgets.QSpacerItem(20, 5, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Fixed)
         self.verticalLayout.addItem(spacerItem1)
-        spacerItem2 = QtWidgets.QSpacerItem(20, 5, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Fixed)
-        self.verticalLayout.addItem(spacerItem2)
         self.verticalLayout_2.addLayout(self.verticalLayout)
 
         self.retranslateUi(Dialog)
@@ -87,4 +73,3 @@ class Ui_Dialog(object):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
         self.debugLabel.setText(_translate("Dialog", "TextLabel"))
-        self.answerLineEdit.setPlaceholderText(_translate("Dialog", "Answer here"))
