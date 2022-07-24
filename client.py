@@ -53,6 +53,14 @@ class GUI():
     def submitToken(self, token: str) -> None:
         self.client.send({TKN.TKN:token})
 
+    def chooseQuestion(self, row: int, col: int) -> None:
+        questionSelectionJSON = {
+            TKN.TKN:TKN.PLAYER_QUESTION_SELECT,
+            KEY.ROW:row,
+            KEY.COL:col
+        }
+        self.client.send(questionSelectionJSON)
+
     # Creates and formats window and widgets for GUI
     def initializeWindow(self) -> QStackedWidget:
         window = QStackedWidget()
@@ -183,14 +191,18 @@ class Board(QWidget):
         super(Board, self).__init__()
         loadUi("ui/board.ui", self)
         self.mainScreen = mainscreen
+        buttons = []
 
         for row in range(1, 6):
             for col in range(0, 6):
                 button = QPushButton()
                 button.setText("$" + str(row*200))
-                button.clicked.connect(lambda: self.mainScreen.togglePrompt())
+                button.clicked.connect(lambda state, row=row, col=col:(
+                    self.mainScreen.togglePrompt(),
+                    self.mainScreen.gui.chooseQuestion(row, col)))
                 button.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding))
                 self.gridLayout.addWidget(button, row, col)
+                buttons.append(button)
 
 # Has the playercard with the score and name 
 class PlayerCard():
