@@ -12,6 +12,7 @@ import keys as KEY
 from PyQt5.QtWidgets import *
 from PyQt5.uic import loadUi
 from PyQt5.QtCore import *
+from PyQt5.QtGui import QColor
 
 print("TCP Client")
 ADDRESS = ("127.0.0.1", 8080)
@@ -39,6 +40,7 @@ class GUI():
     def goToMainScreen(self) -> None:
         self.window.setCurrentIndex(self.window.currentIndex() + 1)
 
+    # Submits an answer to the server
     def submitAnswer(self) -> None:
         answer = self.mainScreen.answerLineEdit.text()
         self.mainScreen.answerLineEdit.clear()
@@ -47,6 +49,9 @@ class GUI():
             KEY.ANSWER:answer
         }
         self.client.send(answerJSON)
+
+    def submitToken(self, token: str) -> None:
+        self.client.send({TKN.TKN:token})
 
     # Creates and formats window and widgets for GUI
     def initializeWindow(self) -> QStackedWidget:
@@ -61,17 +66,19 @@ class GUI():
 
     # Updates the list of players
     def updatePlayers(self, json: dict) -> None:
-        for player in json[KEY.PLAYER_LIST]:
-            self.updatePlayer(player)
+        self.client.playerNum = json[KEY.SELF_PLAYER_NUM]
+
+        for playerJSON in json[KEY.PLAYER_LIST]:
+            self.updatePlayer(playerJSON)
 
         numOfPlayers = len(json[KEY.PLAYER_LIST])
         for i in range(2, numOfPlayers-1, -1):
             self.mainScreen.playerCards[i].clear()
 
     # Updates a single player
-    def updatePlayer(self, json: dict) -> None:
-        self.mainScreen.playerCards[json[KEY.PLAYER_NUM]].widget.nameLabel.setText(json[KEY.PLAYER_NAME])
-        self.mainScreen.playerCards[json[KEY.PLAYER_NUM]].widget.scoreLabel.setText("$"+str(json[KEY.PLAYER_SCORE])+" ")
+    def updatePlayer(self, playerJSON: dict) -> None:
+        self.mainScreen.playerCards[playerJSON[KEY.PLAYER_NUM]].widget.nameLabel.setText(playerJSON[KEY.PLAYER_NAME])
+        self.mainScreen.playerCards[playerJSON[KEY.PLAYER_NUM]].widget.scoreLabel.setText("$"+str(playerJSON[KEY.PLAYER_SCORE])+" ")
 
     # Connects the sets up the client to the server
     def connect(self) -> None:
@@ -98,9 +105,10 @@ class GUI():
     # Closes the client and GUI and join all the threads
     def close(self) -> None:
         msgJSON = {TKN.TKN:TKN.CLIENT_CLOSED}
-        closingThread = threading.Thread(target=self.client.send, args=(msgJSON, ))
-        closingThread.start()
-        self.threads.append(closingThread)
+        if self.client.connected:
+            closingThread = threading.Thread(target=self.client.send, args=(msgJSON, ))
+            closingThread.start()
+            self.threads.append(closingThread)
 
         for thread in self.threads:
             thread.join()
@@ -138,6 +146,8 @@ class MainScreen(QDialog):
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key_Enter, Qt.Key_Return):
             self.gui.submitAnswer()
+        if event.key() == Qt.Key_Space:
+            self.gui.submitToken(TKN.PLAYER_BUZZ)
         event.accept()
 
 # Has the playercard with the score and name 
@@ -148,10 +158,7 @@ class PlayerCard():
         self.widget.move(x, y)
         self.widget.resize(200, 100)
         layout = QVBoxLayout(self.widget)
-        self.widget.setStyleSheet("QWidget {"
-        "   background: " + color + ";"
-        "   border-radius: 15px;k;"
-        "}")
+        self.setColor(color)
         self.widget.nameLabel = QLabel()
         self.widget.nameLabel.setStyleSheet("QLabel {"
         "   color: white;"
@@ -169,6 +176,18 @@ class PlayerCard():
     def clear(self) -> None:
         self.widget.nameLabel.clear()
         self.widget.scoreLabel.clear()
+
+    def lockout(self) -> None:
+        self.setColor("#7D7D7D")
+
+    def buzzedIn(self) -> None:
+        self.widget.move(self.widget.x, self.widget.y+50)
+
+    def setColor(self, color: str) -> None:
+        self.widget.setStyleSheet("QWidget {"
+        "   background: " + color + ";"
+        "   border-radius: 15px;k;"
+        "}")
 
 
 # Controls the GUI <-> Client <-> Server connection
@@ -232,7 +251,6 @@ class Client():
                 updateThread = threading.Thread(target=self.gui.updatePlayers, args=(responseJSON, ))
                 updateThread.start()
 
-            
             elif token == TKN.CLIENT_CLOSED and self.playerNum == responseJSON[KEY.PLAYER_NUM]:
                 self.connected = False
 

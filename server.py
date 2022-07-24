@@ -50,7 +50,7 @@ class Server():
         msgJSON = helper.loadJSON(response)
         if msgJSON[TKN.TKN] == TKN.PLAYER_JOIN:
             thread = threading.Thread(target=self.listeningThread,
-                args=(len(self.players),serverSocket,))
+                args=(serverSocket,))
             self.threads.append(thread)
             player = Player(msgJSON[KEY.PLAYER_NUM], msgJSON[KEY.PLAYER_NAME], serverSocket)
             self.players.append(player)
@@ -63,7 +63,7 @@ class Server():
             self.listenForConnection()
 
     # Listens to socket on the other end
-    def listeningThread(self, playerNum: int, serverSocket: socket.socket):
+    def listeningThread(self, serverSocket: socket.socket):
         connected = True
         while connected:
             response = serverSocket.recv(self.bufferLength)
@@ -74,8 +74,7 @@ class Server():
             # Tells all clients of a closed client
             if token == TKN.CLIENT_CLOSED:
                 self.broadcast(response.decode())
-                serverSocket.close()
-                self.players.remove(self.players[playerNum])
+                self.players.remove(self.players[msgJSON[KEY.PLAYER_NUM]])
                 self.reAssignPlayerNumbers()
                 self.sendPlayerInfo()
                 connected = False
@@ -88,10 +87,12 @@ class Server():
 
     # Sends to all connected clients
     def broadcast(self, msg: str) -> None:
-        msgJson = json.loads(msg)
-        msgJson[KEY.SEND_TYPE] = VAL.BROADCAST
-        msg = json.dumps(msgJson).encode()
+        msgJSON = json.loads(msg)
+        msgJSON[KEY.SEND_TYPE] = VAL.BROADCAST
+        
         for player in self.players:
+            msgJSON[KEY.SELF_PLAYER_NUM] = player.num
+            msg = json.dumps(msgJSON).encode()
             player.socket.send(msg)
 
     def sendPlayerInfo(self):
@@ -108,6 +109,8 @@ class Server():
         for player in self.players:
             player.num = num
             num += 1
+
+        
 
     # Closes all of the client and joins all the threads
     def close(self):

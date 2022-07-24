@@ -60,6 +60,7 @@ class Ui_Dialog(object):
         spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
         self.verticalLayout.addItem(spacerItem)
         self.answerLineEdit = QtWidgets.QLineEdit(Dialog)
+        self.answerLineEdit.setEnabled(True)
         self.answerLineEdit.setMinimumSize(QtCore.QSize(0, 50))
         self.answerLineEdit.setStyleSheet("QLineEdit { \n"
 "    background-color: white;\n"
