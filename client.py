@@ -169,6 +169,7 @@ class MainScreen(QDialog):
             PlayerCard(self,  480, 520, "#6FD966")
         ]
 
+    # Switches between the game board and question prompt
     def togglePrompt(self) -> None:
         if self.widgetIndex:
             self.widgetIndex = 0
@@ -189,6 +190,7 @@ class MainScreen(QDialog):
                 self.debugLabel.hide()
         event.accept()
 
+# Widget that has the question and line edit for answering 
 class QuestionPrompt(QWidget):
     def __init__(self, mainscreen: MainScreen):
         super(QuestionPrompt, self).__init__()
@@ -201,6 +203,7 @@ class QuestionPrompt(QWidget):
             self.mainScreen.togglePrompt()
         event.accept()
 
+# Widget that holds the game board with all the buttons
 class Board(QWidget):
     def __init__(self, mainscreen: MainScreen):
         super(Board, self).__init__()
@@ -246,15 +249,18 @@ class PlayerCard():
         self.widget.nameLabel.clear()
         self.widget.scoreLabel.clear()
 
+    # Not implemented fully
     def lockout(self) -> None:
         self.setColor("#7D7D7D")
 
+    # Buzz in animation
     def buzzedIn(self) -> None:
         self.widget.anim = QPropertyAnimation(self.widget, "pos".encode())
         self.widget.anim.setEndValue(QPoint(self.widget.x(), self.widget.y()-35))
         self.widget.anim.setDuration(200)
         self.widget.anim.start()
 
+    # Buzz out animation
     def buzzedOut(self) -> None:
         self.widget.anim = QPropertyAnimation(self.widget, "pos".encode())
         self.widget.anim.setEndValue(QPoint(self.widget.x(), self.widget.y()+35))
@@ -343,6 +349,7 @@ class Client():
                 #gui.mainScreen.debugLabel.setText(responseJSON[KEY.ANSWER])
 
     # Takes a message and add a header with client info and sends to server
+    # Can broadcast to other clients if toBroadcast is set
     def send(self, msg: dict, toBroadcast: bool = False) -> None:
         sendType = VAL.CLIENT
         if toBroadcast:
@@ -357,6 +364,7 @@ class Client():
         msgJson = json.dumps(msg)
         self.socket.send(msgJson.encode())
 
+# Thread that is to be used for widget animation
 class GUIThread(QThread):
     playerNum = -1
     isBuzzed = False
