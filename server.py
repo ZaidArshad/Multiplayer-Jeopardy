@@ -61,7 +61,7 @@ class Server():
             buzzTimerThread.start()
             listenForBuzzThread.start()
             
-            # Waits until one of the threads to finish
+            # Waits until one of the two threads to finish
             tokenReceived = threadQueue.get()
             
             # DELETE THIS WHEN TESTING IS DONE
@@ -206,7 +206,8 @@ class Server():
             helper.log(response)
             msgJSON = helper.loadJSON(response)
         
-        # Pause timer and broadcast who buzz to all client
+        # Need to Pause timer and broadcast who buzz to all client here
+        
         queue.put(TKN.PLAYER_BUZZ)
 
 if __name__ == "__main__":
