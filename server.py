@@ -3,7 +3,7 @@ from datetime import datetime
 import json
 import socket
 
-from numpy import broadcast
+#from numpy import broadcast
 import helper
 import threading
 from player import Player
@@ -11,6 +11,10 @@ from strings import *
 import tokens as TKN
 import values as VAL
 import keys as KEY
+
+# Buzzer and timer
+import time
+import queue
 
 print("TCP Server")
 ADDRESS = ("127.0.0.1", 8080)
@@ -28,18 +32,17 @@ class Server():
         self.socket.bind(address)
 
         # TEMP
-        self.listenForConnection()
+        #self.listenForConnection()
 
         # Assumption: Player 1 goes first to choose a question
-        playerNum = 1
-        playerTurn = "player_" + playerNum + "_turn"
+        currentPlayerTurn = TKN.PLAYER_1_TURN
 
         # Change to "while jeopardy board is not empty" here
         while True:
             # Show and update Jeopardy Board to player
 
             # Tell all client whose turn it is for selecting question
-            self.broadcast(self, playerTurn)
+            self.broadcast(self, currentPlayerTurn)
 
             # Listen to that player question selection
 
@@ -48,22 +51,44 @@ class Server():
             # Start timer to read question while denying any buzzer (and punishing them?)
 
             # After time to read ends, allow buzzer tokens and start another timer for buzzing time
+            timeToBuzzInSeconds = 30
+            startTime = time.time()
+            threadQueue = queue.Queue()
+            
+            buzzTimerThread = threading.Thread(target=self.startBuzzerTimer, args=(timeToBuzzInSeconds, startTime, threadQueue))
+            listenForBuzzThread = threading.Thread(target=self.listenForBuzz, args=(self.socket, threadQueue))
+            
+            buzzTimerThread.start()
+            listenForBuzzThread.start()
+            
+            # Waits until one of the threads to finish
+            tokenReceived = threadQueue.get()
+            
+            # DELETE THIS WHEN TESTING IS DONE
+            print("Result: {}".format(tokenReceived))
+            
+            # Time to Buzz is over
+            if (tokenReceived == TKN.TIMEOUT):
+                print("Time to buzz is over\n")
+                
+                # Do not update currentPlayerTurn and continue to the next question selection
+            
+            # A player buzz
+            else:
+                # Pause buzzTimerThread
+                
+                # Broadcast to all who buzz first
 
-            # After first buzzer, stop listening and broadcast to all who buzz first (dealing with collision?)
+                # Send signal to chosen player to allow that person to answer while 
+                # sending a different signal to other players to wait
 
-            # Send signal to chosen player to allow that person to answer while 
-            # sending a different signal to other players to wait
-
-            # Analyze chosen player's response and react based on the answer
-
-            # Update playerTurn and playerNum to whoever got the question right.
-            # If nobody gets it right, do not update playerTurn and playerNum and continue to the next question selection
+                # Analyze chosen player's response and react based on the answer. 
+                return 0
+                
 
         # Final jeopardy
 
         # Broadcast winner
-
-
 
     # Listens for a new connection
     def listenForConnection(self) -> None:
@@ -155,6 +180,34 @@ class Server():
         for thread in self.threads:
             thread.join()
         self.socket.close()
+
+    def startBuzzerTimer(self, timeToBuzzInSeconds: int, startTime: float, queue):
+        # Timer Settings
+        timeLimit = startTime + timeToBuzzInSeconds
+        
+        # Timer Countdown Process
+        while (timeLimit - time.time()) > 0:
+            print(timeLimit - time.time())
+        
+        queue.put(TKN.TIMEOUT)
+    
+    def pauseBuzzerTimer(self, startTime: float):
+        timeLeft = time.time() - startTime
+        return timeLeft
+    
+    # Keeps on listening until TKN.PLAYER_BUZZ is received
+    def listenForBuzz(self, serverSocket: socket.socket, queue):
+        response = serverSocket.recv(self.bufferLength)
+        helper.log(response)
+        msgJSON = helper.loadJSON(response)
+        
+        if msgJSON[TKN.TKN] != TKN.PLAYER_BUZZ:
+            response = serverSocket.recv(self.bufferLength)
+            helper.log(response)
+            msgJSON = helper.loadJSON(response)
+        
+        # Pause timer and broadcast who buzz to all client
+        queue.put(TKN.PLAYER_BUZZ)
 
 if __name__ == "__main__":
     server = Server()
