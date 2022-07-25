@@ -28,8 +28,9 @@
         "token": "player_buzz",
         "send_type": "client",
         "player_num": 0,
-        "player_name": "Temp Name"
-    }
+        "player_name": "Temp Name",
+        "status":true
+    },
     {
         "token": "player_question_select",
         "send_type": "client",

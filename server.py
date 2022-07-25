@@ -115,7 +115,7 @@ class Server():
                 self.sendPlayerInfo()
                 connected = False
 
-            if token == TKN.PLAYER_ANSWER:
+            if msgJSON[KEY.SEND_TYPE] == VAL.BROADCAST:
                 self.broadcast(response.decode())
         
         self.listenForConnection()

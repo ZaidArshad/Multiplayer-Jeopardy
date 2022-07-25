@@ -36,6 +36,16 @@ class GUI():
         self.window = self.initializeWindow()
         self.threads = []
 
+        self.worker = GUIThread()
+        self.worker.buzzSignal.connect(self.buzzPlayer)
+        self.worker.unBuzzSignal.connect(self.unBuzzPlayer)
+
+    def buzzPlayer(self, playerNum: int) -> None:
+        self.mainScreen.playerCards[playerNum].buzzedIn()
+    
+    def unBuzzPlayer(self, playerNum: int) -> None:
+        self.mainScreen.playerCards[playerNum].buzzedOut()
+
     # Goes to the main screen
     def goToMainScreen(self) -> None:
         self.window.setCurrentIndex(self.window.currentIndex() + 1)
@@ -48,7 +58,7 @@ class GUI():
             TKN.TKN:TKN.PLAYER_ANSWER,
             KEY.ANSWER:answer
         }
-        self.client.send(answerJSON)
+        self.client.send(answerJSON, True)
 
     def submitToken(self, token: str) -> None:
         self.client.send({TKN.TKN:token})
@@ -164,7 +174,11 @@ class MainScreen(QDialog):
             self.widgetIndex = 0
         else:
             self.widgetIndex = 1
-            self.gui.submitToken(TKN.PLAYER_BUZZ)
+        
+        self.gui.client.send({
+            TKN.TKN:TKN.PLAYER_BUZZ,
+            KEY.STATUS:bool(self.widgetIndex)
+        }, True)
         self.stackedWidget.setCurrentIndex(self.widgetIndex)
 
     def keyPressEvent(self, event) -> None:
@@ -185,7 +199,6 @@ class QuestionPrompt(QWidget):
         if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
             self.mainScreen.gui.submitAnswer()
             self.mainScreen.togglePrompt()
-            self.mainScreen.playerCards[0].buzzedOut()
         event.accept()
 
 class Board(QWidget):
@@ -201,7 +214,6 @@ class Board(QWidget):
                 button.setText("$" + str(row*200))
                 button.clicked.connect(lambda state, row=row, col=col:(
                     self.mainScreen.togglePrompt(),
-                    self.mainScreen.playerCards[0].buzzedIn(),
                     self.mainScreen.gui.chooseQuestion(row, col)))
                 button.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding))
                 self.gridLayout.addWidget(button, row, col)
@@ -304,6 +316,7 @@ class Client():
         helper.log(response)
         responseJson = helper.loadJSON(response)
         return responseJson
+        
 
     # Repeatedly listens to the server for any messages
     def listeningThread(self) -> None:
@@ -320,20 +333,41 @@ class Client():
             elif token == TKN.CLIENT_CLOSED and self.playerNum == responseJSON[KEY.PLAYER_NUM]:
                 self.connected = False
 
+            elif token == TKN.PLAYER_BUZZ:
+                self.gui.worker.isBuzzed =  responseJSON[KEY.STATUS]
+                self.gui.worker.playerNum = responseJSON[KEY.PLAYER_NUM]
+                self.gui.worker.start()
+
             elif token == TKN.PLAYER_ANSWER:
                 pass
                 #gui.mainScreen.debugLabel.setText(responseJSON[KEY.ANSWER])
 
     # Takes a message and add a header with client info and sends to server
-    def send(self, msg: dict) -> None:
+    def send(self, msg: dict, toBroadcast: bool = False) -> None:
+        sendType = VAL.CLIENT
+        if toBroadcast:
+            sendType = VAL.BROADCAST
+
         standardHeader = {
-            KEY.SEND_TYPE:VAL.CLIENT,
+            KEY.SEND_TYPE:sendType,
             KEY.PLAYER_NUM:self.playerNum,
             KEY.PLAYER_NAME:self.playerName,
         }
         msg.update(standardHeader)
         msgJson = json.dumps(msg)
         self.socket.send(msgJson.encode())
+
+class GUIThread(QThread):
+    playerNum = -1
+    isBuzzed = False
+    buzzSignal = pyqtSignal(int)
+    unBuzzSignal = pyqtSignal(int)
+    def run(self):
+        if self.isBuzzed:
+            self.buzzSignal.emit(self.playerNum)
+        else:
+            self.unBuzzSignal.emit(self.playerNum)
+        
 
 if __name__ == "__main__":
     gui = GUI()
