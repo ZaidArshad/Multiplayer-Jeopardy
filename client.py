@@ -140,9 +140,9 @@ class LoginScreen(QDialog):
 class MainScreen(QDialog):
     def __init__(self, gui):
         super(MainScreen, self).__init__()
-        loadUi("ui/main_screen.ui", self)
         self.gui = gui
-
+        loadUi("ui/main_screen.ui", self)
+        
         self.widgetIndex = 0
         self.questionPrompt = QuestionPrompt(self)
         self.board = Board(self)
@@ -150,6 +150,7 @@ class MainScreen(QDialog):
         self.stackedWidgetHolder.addWidget(self.stackedWidget)
         self.stackedWidget.addWidget(self.board)
         self.stackedWidget.addWidget(self.questionPrompt)
+        self.setFixedSize(700, 600)
 
         self.debugLabel.setText("THIS IS DEBUG LOG PRESS ESCAPE TO SHOW AND HIDE")
         self.playerCards = [
@@ -184,6 +185,7 @@ class QuestionPrompt(QWidget):
         if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
             self.mainScreen.gui.submitAnswer()
             self.mainScreen.togglePrompt()
+            self.mainScreen.playerCards[0].buzzedOut()
         event.accept()
 
 class Board(QWidget):
@@ -199,6 +201,7 @@ class Board(QWidget):
                 button.setText("$" + str(row*200))
                 button.clicked.connect(lambda state, row=row, col=col:(
                     self.mainScreen.togglePrompt(),
+                    self.mainScreen.playerCards[0].buzzedIn(),
                     self.mainScreen.gui.chooseQuestion(row, col)))
                 button.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding))
                 self.gridLayout.addWidget(button, row, col)
@@ -210,7 +213,7 @@ class PlayerCard():
         self.widget = QWidget(parent)
         self.color = color
         self.widget.move(x, y)
-        self.widget.resize(200, 100)
+        self.widget.resize(200, 300)
         layout = QVBoxLayout(self.widget)
         self.setColor(color)
         self.widget.nameLabel = QLabel()
@@ -235,7 +238,16 @@ class PlayerCard():
         self.setColor("#7D7D7D")
 
     def buzzedIn(self) -> None:
-        self.widget.move(self.widget.x, self.widget.y+50)
+        self.widget.anim = QPropertyAnimation(self.widget, "pos".encode())
+        self.widget.anim.setEndValue(QPoint(self.widget.x(), self.widget.y()-35))
+        self.widget.anim.setDuration(200)
+        self.widget.anim.start()
+
+    def buzzedOut(self) -> None:
+        self.widget.anim = QPropertyAnimation(self.widget, "pos".encode())
+        self.widget.anim.setEndValue(QPoint(self.widget.x(), self.widget.y()+35))
+        self.widget.anim.setDuration(200)
+        self.widget.anim.start()
 
     def setColor(self, color: str) -> None:
         self.widget.setStyleSheet("QWidget {"
