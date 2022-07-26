@@ -225,10 +225,10 @@ class Board(QWidget):
         self.mainScreen = mainscreen
         buttons = []
 
-        for row in range(1, 6):
-            for col in range(0, 6):
+        for row in range(5):
+            for col in range(6):
                 button = QPushButton()
-                button.setText("$" + str(row*200))
+                button.setText("$" + str((row+1)*200))
                 button.clicked.connect(lambda state, row=row, col=col:(
                     self.mainScreen.gui.chooseQuestion(row, col)))
                 
@@ -361,7 +361,7 @@ class Client():
                 self.gui.animationThread.start()
             
             elif token == TKN.SERVER_CATEGORY:
-                self.categories = responseJSON[KEY.CATEGORIES].split("__")
+                self.categories = responseJSON[KEY.CATEGORIES]
                 self.gui.mainScreen.board.label.setText(self.categories[0])
                 self.gui.mainScreen.board.label_2.setText(self.categories[1])
                 self.gui.mainScreen.board.label_3.setText(self.categories[2])

@@ -16,6 +16,9 @@ import keys as KEY
 import time
 import queue
 
+#To generate a random game
+import random
+
 print("TCP Server")
 ADDRESS = ("127.0.0.1", 8080)
 BUFFER = 1024
@@ -26,12 +29,34 @@ class Server():
         self.players = []
         self.threads = [threading.Thread]
         self.bufferLength = BUFFER
+        self.gameData = [[0 for i in range(5)] for j in range(6)]
+        self.categories = []
 
     # Binds the server to the given address and start threading
     def start(self, address: tuple[str, int]) -> None:
         self.socket.bind(address)
-
         # TEMP
+
+        #Choose the categories and questions from the jeopardy data
+        file = open("jeopardy database.json",encoding="utf8")
+        data = json.load(file)
+        game_number = random.randint(1,375)
+        chosenData = [x for x in data if x["game_number"]==game_number]
+        finalJepID = random.randint(1,74)
+        for x in data:
+            if x["category_number"]==finalJepID:
+                finalJepQuestion = x
+                break
+        file.close()
+
+        #Creating the 2D array of questions
+        questionIndex = 0
+        for category in range(6):
+            self.categories.append(chosenData[questionIndex]["category"])
+            for question in range(5):
+                currentQuestion = chosenData[questionIndex]
+                self.gameData[category][question] = currentQuestion
+                questionIndex+=1
         self.listenForConnection()
 
         # Assumption: Player 1 goes first to choose a question
@@ -44,9 +69,9 @@ class Server():
             # Tell all client whose turn it is for selecting question
             self.broadcast(self, currentPlayerTurn)
 
-            # Listen to that player question selection
+            # Listen to that player question selection - THIS HAS BEEN DONE!
 
-            # Broadcast chosen question
+            # Broadcast chosen question - THIS HAS BEEN DONE!
 
             # Start timer to read question while denying any buzzer (and punishing them?)
 
@@ -126,11 +151,14 @@ class Server():
     # Listens to socket on the other end
     def listeningThread(self, serverSocket: socket.socket):
         connected = True
+
+        #Send the different categories to the client
         serverSocket.send(json.dumps({
             TKN.TKN:TKN.SERVER_CATEGORY,
             KEY.SEND_TYPE:VAL.SERVER,
-            KEY.CATEGORIES:"TEST1__TEST2__TEST3__TEST4__TEST5__TEST6",
+            KEY.CATEGORIES:self.categories,
         }).encode())
+
         while connected:
             response = serverSocket.recv(self.bufferLength)
             helper.log(response)
@@ -145,11 +173,13 @@ class Server():
                 self.sendPlayerInfo()
                 connected = False
             
+            #Sends the chosen question to all clients
             if token == TKN.PLAYER_QUESTION_SELECT:
                 questionJSON = {
                     TKN.TKN:TKN.SERVER_QUESTION_SELECT,
-                    KEY.QUESTION:"Question "+str(msgJSON[KEY.ROW])+","+str(msgJSON[KEY.COL]),
-                    KEY.ANSWER:"answer",
+                    #KEY.QUESTION:"Question "+str(msgJSON[KEY.ROW])+","+str(msgJSON[KEY.COL]),
+                    KEY.QUESTION:self.gameData[msgJSON[KEY.COL]][msgJSON[KEY.ROW]]["question"],
+                    KEY.ANSWER:self.gameData[msgJSON[KEY.COL]][msgJSON[KEY.ROW]]["answer"],
                 }
                 self.broadcast(json.dumps(questionJSON))
 
