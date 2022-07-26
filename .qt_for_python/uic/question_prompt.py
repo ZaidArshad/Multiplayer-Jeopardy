@@ -41,6 +41,11 @@ class Ui_Form(object):
         self.categoryLabel.setObjectName("categoryLabel")
         self.verticalLayout_2.addWidget(self.categoryLabel)
         self.verticalWidget = QtWidgets.QWidget(Form)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.verticalWidget.sizePolicy().hasHeightForWidth())
+        self.verticalWidget.setSizePolicy(sizePolicy)
         self.verticalWidget.setStyleSheet("QWidget {\n"
 "    background: #3B29FF;\n"
 "    border-radius: 30px;\n"
@@ -75,9 +80,8 @@ class Ui_Form(object):
         self.timerLabel.setObjectName("timerLabel")
         self.verticalLayout.addWidget(self.timerLabel)
         self.verticalLayout_2.addWidget(self.verticalWidget)
-        spacerItem2 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
-        self.verticalLayout_2.addItem(spacerItem2)
         self.answerLineEdit = QtWidgets.QLineEdit(Form)
+        self.answerLineEdit.setEnabled(False)
         self.answerLineEdit.setMinimumSize(QtCore.QSize(0, 50))
         self.answerLineEdit.setStyleSheet("QLineEdit { \n"
 "    background-color: white;\n"
@@ -89,8 +93,8 @@ class Ui_Form(object):
 "}")
         self.answerLineEdit.setObjectName("answerLineEdit")
         self.verticalLayout_2.addWidget(self.answerLineEdit)
-        spacerItem3 = QtWidgets.QSpacerItem(20, 23, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Fixed)
-        self.verticalLayout_2.addItem(spacerItem3)
+        spacerItem2 = QtWidgets.QSpacerItem(20, 23, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Fixed)
+        self.verticalLayout_2.addItem(spacerItem2)
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)

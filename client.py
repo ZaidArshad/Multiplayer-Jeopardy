@@ -37,9 +37,9 @@ class GUI():
         self.window = self.initializeWindow()
         self.threads = []
 
-        self.worker = GUIThread()
-        self.worker.buzzSignal.connect(self.buzzPlayer)
-        self.worker.unBuzzSignal.connect(self.unBuzzPlayer)
+        self.animationThread = AnimationThread()
+        self.animationThread.buzzSignal.connect(self.buzzPlayer)
+        self.animationThread.unBuzzSignal.connect(self.unBuzzPlayer)
 
     def buzzPlayer(self, playerNum: int) -> None:
         self.mainScreen.playerCards[playerNum].buzzedIn()
@@ -144,7 +144,7 @@ class LoginScreen(QDialog):
         self.setFixedSize(700, 600)
 
     def keyPressEvent(self, event):
-        if event.key() in (Qt.Key_Enter, Qt.Key_Return):
+        if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
             gui.connect()
         event.accept()
 
@@ -164,6 +164,9 @@ class MainScreen(QDialog):
         self.stackedWidget.addWidget(self.questionPrompt)
         self.setFixedSize(700, 600)
 
+        self.promptThread = PromptThread()
+        self.promptThread.togglePromptSignal.connect(self.togglePrompt)
+
         self.debugLabel.setText("THIS IS DEBUG LOG PRESS ESCAPE TO SHOW AND HIDE")
         self.playerCards = [
             PlayerCard(self,  21, 520, "#FF4B4B"),
@@ -177,11 +180,6 @@ class MainScreen(QDialog):
             self.widgetIndex = 0
         else:
             self.widgetIndex = 1
-        
-        self.gui.client.send({
-            TKN.TKN:TKN.PLAYER_BUZZ,
-            KEY.STATUS:bool(self.widgetIndex)
-        }, True)
         self.stackedWidget.setCurrentIndex(self.widgetIndex)
 
     def keyPressEvent(self, event) -> None:
@@ -190,6 +188,7 @@ class MainScreen(QDialog):
                 self.debugLabel.show()
             else:
                 self.debugLabel.hide()
+        
         event.accept()
 
 # Widget that has the question and line edit for answering 
@@ -198,12 +197,25 @@ class QuestionPrompt(QWidget):
         super(QuestionPrompt, self).__init__()
         loadUi("ui/question_prompt.ui", self)
         self.mainScreen = mainscreen
+        self.isBuzzed = False
+        self.setFocusPolicy(Qt.StrongFocus)
 
     def keyPressEvent(self, event) -> None:
         if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
-            self.mainScreen.gui.submitAnswer()
-            self.mainScreen.togglePrompt()
+            if self.isBuzzed:
+                self.buzzed(False)
+                self.mainScreen.gui.submitAnswer()
+        if event.key() == Qt.Key.Key_Space:
+            self.buzzed(True)
         event.accept()
+
+    def buzzed(self, status: bool) -> None:
+        self.isBuzzed = status
+        self.answerLineEdit.setEnabled(status)
+        self.mainScreen.gui.client.send({
+            TKN.TKN:TKN.PLAYER_BUZZ,
+            KEY.STATUS:status
+        }, True)
 
 # Widget that holds the game board with all the buttons
 class Board(QWidget):
@@ -218,7 +230,6 @@ class Board(QWidget):
                 button = QPushButton()
                 button.setText("$" + str(row*200))
                 button.clicked.connect(lambda state, row=row, col=col:(
-                    self.mainScreen.togglePrompt(),
                     self.mainScreen.gui.chooseQuestion(row, col)))
                 
                 button.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding))
@@ -229,6 +240,7 @@ class Board(QWidget):
 class PlayerCard():
     def __init__(self, parent: QDialog, x: int, y: int, color: str):
         self.widget = QWidget(parent)
+        self.parent = parent
         self.color = color
         self.widget.move(x, y)
         self.widget.resize(200, 300)
@@ -344,9 +356,9 @@ class Client():
                 self.connected = False
 
             elif token == TKN.PLAYER_BUZZ:
-                self.gui.worker.isBuzzed =  responseJSON[KEY.STATUS]
-                self.gui.worker.playerNum = responseJSON[KEY.PLAYER_NUM]
-                self.gui.worker.start()
+                self.gui.animationThread.isBuzzed =  responseJSON[KEY.STATUS]
+                self.gui.animationThread.playerNum = responseJSON[KEY.PLAYER_NUM]
+                self.gui.animationThread.start()
             
             elif token == TKN.SERVER_CATEGORY:
                 self.categories = responseJSON[KEY.CATEGORIES].split("__")
@@ -359,10 +371,11 @@ class Client():
             
             elif token == TKN.SERVER_QUESTION_SELECT:
                 self.gui.mainScreen.questionPrompt.questionLabel.setText(responseJSON[KEY.QUESTION])
+                self.gui.mainScreen.promptThread.start()
+
 
             elif token == TKN.PLAYER_ANSWER:
-                pass
-                #gui.mainScreen.debugLabel.setText(responseJSON[KEY.ANSWER])
+                self.gui.mainScreen.promptThread.start()
 
     # Takes a message and add a header with client info and sends to server
     # Can broadcast to other clients if toBroadcast is set
@@ -381,7 +394,7 @@ class Client():
         self.socket.send(msgJson.encode())
 
 # Thread that is to be used for widget animation
-class GUIThread(QThread):
+class AnimationThread(QThread):
     playerNum = -1
     isBuzzed = False
     buzzSignal = pyqtSignal(int)
@@ -391,7 +404,11 @@ class GUIThread(QThread):
             self.buzzSignal.emit(self.playerNum)
         else:
             self.unBuzzSignal.emit(self.playerNum)
-        
+
+class PromptThread(QThread):
+    togglePromptSignal = pyqtSignal()
+    def run(self):
+        self.togglePromptSignal.emit()
 
 if __name__ == "__main__":
     gui = GUI()

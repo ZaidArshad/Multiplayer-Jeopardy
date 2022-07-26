@@ -148,7 +148,7 @@ class Server():
             if token == TKN.PLAYER_QUESTION_SELECT:
                 questionJSON = {
                     TKN.TKN:TKN.SERVER_QUESTION_SELECT,
-                    KEY.QUESTION:"This is the question",
+                    KEY.QUESTION:"Question "+str(msgJSON[KEY.ROW])+","+str(msgJSON[KEY.COL]),
                     KEY.ANSWER:"answer",
                 }
                 self.broadcast(json.dumps(questionJSON))
