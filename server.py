@@ -32,7 +32,7 @@ class Server():
         self.socket.bind(address)
 
         # TEMP
-        #self.listenForConnection()
+        self.listenForConnection()
 
         # Assumption: Player 1 goes first to choose a question
         currentPlayerTurn = TKN.PLAYER_1_TURN
