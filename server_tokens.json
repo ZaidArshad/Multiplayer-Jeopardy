@@ -35,4 +35,20 @@
         "send_type": "server",
         "player_num": 0
     }
+    ,
+    {
+      "token": "server_category",
+      "send_type": "server",
+      "categories": "category_1"
+    }
+    ,
+    {
+        "token": "server_question_select",
+        "send_type": "server",
+        "player_num": 0,
+        "row": 0,
+        "col": "0",
+        "question": "?",
+        "answer":  "?"
+    }
 ]

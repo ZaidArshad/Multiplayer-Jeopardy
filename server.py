@@ -126,6 +126,11 @@ class Server():
     # Listens to socket on the other end
     def listeningThread(self, serverSocket: socket.socket):
         connected = True
+        serverSocket.send(json.dumps({
+            TKN.TKN:TKN.SERVER_CATEGORY,
+            KEY.SEND_TYPE:VAL.SERVER,
+            KEY.CATEGORIES:"TEST1__TEST2__TEST3__TEST4__TEST5__TEST6",
+        }).encode())
         while connected:
             response = serverSocket.recv(self.bufferLength)
             helper.log(response)
@@ -139,6 +144,16 @@ class Server():
                 self.reAssignPlayerNumbers()
                 self.sendPlayerInfo()
                 connected = False
+            
+            if token == TKN.PLAYER_QUESTION_SELECT:
+                questionJSON = {
+                    TKN.TKN:TKN.SERVER_QUESTION_SELECT,
+                    KEY.QUESTION:"This is the question",
+                    KEY.ANSWER:"answer",
+                }
+                self.broadcast(json.dumps(questionJSON))
+
+
 
             if msgJSON[KEY.SEND_TYPE] == VAL.BROADCAST:
                 self.broadcast(response.decode())
@@ -200,7 +215,6 @@ class Server():
         response = serverSocket.recv(self.bufferLength)
         helper.log(response)
         msgJSON = helper.loadJSON(response)
-        
         if msgJSON[TKN.TKN] != TKN.PLAYER_BUZZ:
             response = serverSocket.recv(self.bufferLength)
             helper.log(response)

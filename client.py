@@ -18,6 +18,7 @@ print("TCP Client")
 ADDRESS = ("127.0.0.1", 8080)
 BUFFER = 1024
 
+
 # Sourced from https://stackoverflow.com/questions/39247342/pyqt-gui-size-on-high-resolution-screens
 # Scales the application for 4k monitors
 if hasattr(Qt, 'AA_EnableHighDpiScaling'):
@@ -69,6 +70,7 @@ class GUI():
             KEY.ROW:row,
             KEY.COL:col
         }
+        self.mainScreen.questionPrompt.categoryLabel.setText(self.client.categories[col])
         self.client.send(questionSelectionJSON)
 
     # Creates and formats window and widgets for GUI
@@ -218,6 +220,7 @@ class Board(QWidget):
                 button.clicked.connect(lambda state, row=row, col=col:(
                     self.mainScreen.togglePrompt(),
                     self.mainScreen.gui.chooseQuestion(row, col)))
+                
                 button.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding))
                 self.gridLayout.addWidget(button, row, col)
                 buttons.append(button)
@@ -281,6 +284,7 @@ class Client():
         self.gui = gui
         self.bufferLength = BUFFER
         self.connected = False
+        self.categories = []
 
     # Connects to the server, prints confirmation
     def connect(self, address: tuple[str, int], playerName: str) -> None:
@@ -343,6 +347,18 @@ class Client():
                 self.gui.worker.isBuzzed =  responseJSON[KEY.STATUS]
                 self.gui.worker.playerNum = responseJSON[KEY.PLAYER_NUM]
                 self.gui.worker.start()
+            
+            elif token == TKN.SERVER_CATEGORY:
+                self.categories = responseJSON[KEY.CATEGORIES].split("__")
+                self.gui.mainScreen.board.label.setText(self.categories[0])
+                self.gui.mainScreen.board.label_2.setText(self.categories[1])
+                self.gui.mainScreen.board.label_3.setText(self.categories[2])
+                self.gui.mainScreen.board.label_4.setText(self.categories[3])
+                self.gui.mainScreen.board.label_5.setText(self.categories[4])
+                self.gui.mainScreen.board.label_6.setText(self.categories[5])
+            
+            elif token == TKN.SERVER_QUESTION_SELECT:
+                self.gui.mainScreen.questionPrompt.questionLabel.setText(responseJSON[KEY.QUESTION])
 
             elif token == TKN.PLAYER_ANSWER:
                 pass
