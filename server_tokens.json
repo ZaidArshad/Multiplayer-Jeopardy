@@ -50,7 +50,7 @@
         "answer":  "?"
     },
     {
-        "token": "timeout",
+        "token": "buzz_time_over",
         "send_type": "broadcast",
         "player_num": 0
     },
