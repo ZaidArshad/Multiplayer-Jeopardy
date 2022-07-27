@@ -1,6 +1,6 @@
 TKN = "token"
 TIMEOUT = "timeout"
-<<<<<<< Updated upstream
+BUZZ_TIME_OVER = "buzz_time_over"
 LINE_EDIT_UPDATE = "line_edit_update"
 ANSWER_RESPONSE = "answer_response"
 CLIENT_CONNECTED = "client_connected"
