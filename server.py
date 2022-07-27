@@ -37,8 +37,7 @@ class Server():
     # Binds the server to the given address and start threading
     def start(self, address: tuple[str, int]) -> None:
         self.socket.bind(address)
-        # TEMP
-
+        
         #Choose the categories and questions from the jeopardy data
         file = open("jeopardy database.json",encoding="utf8")
         data = json.load(file)
@@ -62,23 +61,22 @@ class Server():
         self.listenForConnection()
 
         # Assumption: Player 1 goes first to choose a question
-        currentPlayerTurn = TKN.PLAYER_1_TURN
+        currentPlayerTurn = '{"token" : "player_turn", "current_player_turn" : 0}'
 
         # Change to "while jeopardy board is not empty" here
         while True:
             # Show and update Jeopardy Board to player
 
             # Tell all client whose turn it is for selecting question
-            self.broadcast(self, currentPlayerTurn)
-
+            self.broadcast(currentPlayerTurn)
             # Listen to that player question selection - THIS HAS BEEN DONE!
 
             # Broadcast chosen question - THIS HAS BEEN DONE!
 
-            # Start timer to read question while denying any buzzer (and punishing them?)
+            # Start timer to read question while denying any buzzer 
 
             # After time to read ends, allow buzzer tokens and start another timer for buzzing time
-            timeToBuzzInSeconds = 30
+            timeToBuzzInSeconds = 5
             startTime = time.time()
             threadQueue = queue.Queue()
             
@@ -95,13 +93,15 @@ class Server():
             print("Result: {}".format(tokenReceived))
             
             # Time to Buzz is over
-            if (tokenReceived == TKN.TIMEOUT):
-                print("Time to buzz is over\n")
+            if (tokenReceived[TKN.TKN] == TKN.BUZZ_TIME_OVER):
+                timeoutMsg = '{"token": "buzz_time_over"}'
+                self.broadcast(timeoutMsg)
                 
-                # Do not update currentPlayerTurn and continue to the next question selection
             
             # A player buzz
             else:
+                pass # DELETE THIS WHEN TESTING IS DONE
+            
                 # Pause buzzTimerThread
                 
                 # Broadcast to all who buzz first
@@ -110,10 +110,11 @@ class Server():
                 # sending a different signal to other players to wait
 
                 # Analyze chosen player's response and react based on the answer. 
-                return 0
+                
+            return 0 # DELETE THIS WHEN TESTING IS DONE
                 
 
-        # Final jeopardy
+        # Final jeopardy (Optional)
 
         # Broadcast winner
 
@@ -258,28 +259,26 @@ class Server():
         
         # Timer Countdown Process
         while (timeLimit - time.time()) > 0:
-            print(timeLimit - time.time())
+            pass
         
-        queue.put(TKN.TIMEOUT)
-    
-    def pauseBuzzerTimer(self, startTime: float):
-        timeLeft = time.time() - startTime
-        return timeLeft
+        buzzingTimeOver = {"token" : "buzz_time_over"}
+        queue.put(buzzingTimeOver)
     
     # Keeps on listening until TKN.PLAYER_BUZZ is received
     def listenForBuzz(self, serverSocket: socket.socket, queue):
-        response = serverSocket.recv(self.bufferLength)
-        helper.log(response)
-        msgJSON = helper.loadJSON(response)
-        if msgJSON[TKN.TKN] != TKN.PLAYER_BUZZ:
+        buzzNotReceived = True
+        
+        while buzzNotReceived:
+            # Listen for buzz
             response = serverSocket.recv(self.bufferLength)
             helper.log(response)
             msgJSON = helper.loadJSON(response)
+            
+            if (msgJSON[TKN.TKN] == TKN.PLAYER_BUZZ):
+                queue.put(msgJSON)
+                buzzNotReceived = False
         
-        # Need to Pause timer and broadcast who buzz to all client here
-        
-        queue.put(TKN.PLAYER_BUZZ)
-
 if __name__ == "__main__":
     server = Server()
     server.start(ADDRESS)
+    

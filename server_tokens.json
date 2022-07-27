@@ -34,14 +34,12 @@
         "token": "player_num_update",
         "send_type": "server",
         "player_num": 0
-    }
-    ,
+    },
     {
       "token": "server_category",
       "send_type": "server",
       "categories": "category_1"
-    }
-    ,
+    },
     {
         "token": "server_question_select",
         "send_type": "server",
@@ -50,5 +48,16 @@
         "col": "0",
         "question": "?",
         "answer":  "?"
+    },
+    {
+        "token": "timeout",
+        "send_type": "broadcast",
+        "player_num": 0
+    },
+    {
+        "token": "player_turn",
+        "send_type": "broadcast",
+        "player_num": 0,
+        "current_player_turn" : 0
     }
 ]
