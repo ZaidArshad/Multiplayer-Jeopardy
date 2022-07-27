@@ -393,20 +393,8 @@ class Client():
             elif token == TKN.PLAYER_ANSWER:
                 self.gui.mainScreen.questionPrompt.answerLineEdit.setText(responseJSON[KEY.ANSWER])
 
-            elif token == TKN.PLAYER_1_TURN:
-                if self.playerNum == 0:
-                    self.turn = True
-                else:
-                    self.turn = False
-
-            elif token == TKN.PLAYER_2_TURN:
-                if self.playerNum == 1:
-                    self.turn = True
-                else:
-                    self.turn = False
-            
-            elif token == TKN.PLAYER_3_TURN:
-                if self.playerNum == 2:
+            elif token == TKN.PLAYER_TURN:
+                if self.playerNum == responseJSON[KEY.CURRENT_PLAYER_TURN]:
                     self.turn = True
                 else:
                     self.turn = False
