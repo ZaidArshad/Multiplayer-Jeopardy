@@ -68,6 +68,11 @@ class GUI():
         self.client.send({TKN.TKN:token})
 
     def chooseQuestion(self, row: int, col: int) -> None:
+        # uncomment this when player turn announcement from server works
+        # if its not your turn, do not allow question selection
+        # if not self.client.turn:
+        #     return
+        #########################
         questionSelectionJSON = {
             TKN.TKN:TKN.PLAYER_QUESTION_SELECT,
             KEY.ROW:row,
@@ -309,6 +314,7 @@ class Client():
         self.bufferLength = BUFFER
         self.connected = False
         self.categories = []
+        self.turn = False
 
     # Connects to the server, prints confirmation
     def connect(self, address: tuple[str, int], playerName: str) -> None:
@@ -386,6 +392,16 @@ class Client():
 
             elif token == TKN.PLAYER_ANSWER:
                 self.gui.mainScreen.questionPrompt.answerLineEdit.setText(responseJSON[KEY.ANSWER])
+
+            elif token == TKN.PLAYER_1_TURN and self.playerNum == 0:
+                self.turn == True
+
+            elif token == TKN.PLAYER_2_TURN and self.playerNum == 1:
+                self.turn == True
+            
+            elif token == TKN.PLAYER_3_TURN and self.playerNum == 2:
+                self.turn == True
+
 
     def handleAnswerReponse(self, responseJSON: dict) -> None:
         if responseJSON[KEY.STATUS]:
