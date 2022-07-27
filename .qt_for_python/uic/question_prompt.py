@@ -20,6 +20,10 @@ class Ui_Form(object):
         Form.setSizePolicy(sizePolicy)
         Form.setStyleSheet("QWidget {\n"
 "background: #5F8BFF\n"
+"}\n"
+"\n"
+"QLineEdit {\n"
+"    background-color: white;\n"
 "}")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(Form)
         self.verticalLayout_2.setSpacing(10)
@@ -60,7 +64,7 @@ class Ui_Form(object):
         self.questionLabel = QtWidgets.QLabel(self.verticalWidget)
         self.questionLabel.setStyleSheet("QLabel {\n"
 "    font-family: \'CantoraOne\';\n"
-"    font-size: 40px;\n"
+"    font-size: 35px;\n"
 "    text-align: center;\n"
 "    font-weight: 400;\n"
 "}")
@@ -84,7 +88,6 @@ class Ui_Form(object):
         self.answerLineEdit.setEnabled(False)
         self.answerLineEdit.setMinimumSize(QtCore.QSize(0, 50))
         self.answerLineEdit.setStyleSheet("QLineEdit { \n"
-"    background-color: white;\n"
 "    color: black;\n"
 "    border-radius: 13px;\n"
 "    font: 15pt \"Inter\";\n"

@@ -22,6 +22,10 @@
   <property name="styleSheet">
    <string notr="true">QWidget {
 background: #5F8BFF
+}
+
+QLineEdit {
+	background-color: white;
 }</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -98,7 +102,7 @@ background: #5F8BFF
         <property name="styleSheet">
          <string notr="true">QLabel {
 	font-family: 'CantoraOne';
-	font-size: 40px;
+	font-size: 35px;
 	text-align: center;
 	font-weight: 400;
 }</string>
@@ -163,7 +167,6 @@ background: #5F8BFF
      </property>
      <property name="styleSheet">
       <string notr="true">QLineEdit { 
-	background-color: white;
 	color: black;
 	border-radius: 13px;
 	font: 15pt &quot;Inter&quot;;

@@ -61,7 +61,7 @@ class Ui_Form(object):
         self.label_5.setStyleSheet("QLabel {\n"
 "font-family: \'Lato\';\n"
 "font-weight: 700;\n"
-"font-size: 15px;\n"
+"font-size: 12px;\n"
 "}")
         self.label_5.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.label_5.setWordWrap(True)
@@ -76,7 +76,7 @@ class Ui_Form(object):
         self.label.setStyleSheet("QLabel {\n"
 "font-family: \'Lato\';\n"
 "font-weight: 700;\n"
-"font-size: 15px;\n"
+"font-size: 12px;\n"
 "}")
         self.label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.label.setWordWrap(True)
@@ -91,7 +91,7 @@ class Ui_Form(object):
         self.label_2.setStyleSheet("QLabel {\n"
 "font-family: \'Lato\';\n"
 "font-weight: 700;\n"
-"font-size: 15px;\n"
+"font-size: 12px;\n"
 "}")
         self.label_2.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.label_2.setWordWrap(True)
@@ -106,7 +106,7 @@ class Ui_Form(object):
         self.label_4.setStyleSheet("QLabel {\n"
 "font-family: \'Lato\';\n"
 "font-weight: 700;\n"
-"font-size: 15px;\n"
+"font-size: 12px;\n"
 "}")
         self.label_4.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.label_4.setWordWrap(True)
@@ -121,7 +121,7 @@ class Ui_Form(object):
         self.label_3.setStyleSheet("QLabel {\n"
 "font-family: \'Lato\';\n"
 "font-weight: 700;\n"
-"font-size: 15px;\n"
+"font-size: 12px;\n"
 "}")
         self.label_3.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.label_3.setWordWrap(True)
@@ -136,7 +136,7 @@ class Ui_Form(object):
         self.label_6.setStyleSheet("QLabel {\n"
 "font-family: \'Lato\';\n"
 "font-weight: 700;\n"
-"font-size: 15px;\n"
+"font-size: 12px;\n"
 "}")
         self.label_6.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.label_6.setWordWrap(True)

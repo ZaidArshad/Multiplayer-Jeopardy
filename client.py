@@ -12,11 +12,15 @@ import keys as KEY
 from PyQt5.QtWidgets import *
 from PyQt5.uic import loadUi
 from PyQt5.QtCore import *
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QPalette, QColor
+from PyQt5 import QtTest
 
 print("TCP Client")
 ADDRESS = ("127.0.0.1", 8080)
 BUFFER = 1024
+
+UI_WIDTH = 700
+UI_HEIGHT = 600
 
 
 # Sourced from https://stackoverflow.com/questions/39247342/pyqt-gui-size-on-high-resolution-screens
@@ -54,7 +58,6 @@ class GUI():
     # Submits an answer to the server
     def submitAnswer(self) -> None:
         answer = self.mainScreen.questionPrompt.answerLineEdit.text()
-        self.mainScreen.questionPrompt.answerLineEdit.clear()
         answerJSON = {
             TKN.TKN:TKN.PLAYER_ANSWER,
             KEY.ANSWER:answer
@@ -76,7 +79,7 @@ class GUI():
     # Creates and formats window and widgets for GUI
     def initializeWindow(self) -> QStackedWidget:
         window = QStackedWidget()
-        window.setFixedSize(700, 600)
+        window.setFixedSize(UI_WIDTH, UI_HEIGHT)
         window.addWidget(self.loginScreen)
         window.addWidget(self.mainScreen)
         window.show()
@@ -141,7 +144,6 @@ class LoginScreen(QDialog):
         self.connectButton.clicked.connect(lambda:
             gui.connect())
         self.errorLabel.setText("")
-        self.setFixedSize(700, 600)
 
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
@@ -200,14 +202,14 @@ class QuestionPrompt(QWidget):
         self.isBuzzed = False
         self.setFocusPolicy(Qt.StrongFocus)
 
-    def keyPressEvent(self, event) -> None:
-        if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
-            if self.isBuzzed:
-                self.buzzed(False)
-                self.mainScreen.gui.submitAnswer()
-        if event.key() == Qt.Key.Key_Space:
-            self.buzzed(True)
-        event.accept()
+    def setLineEditColor(self, color: str) -> None:
+        self.setStyleSheet("QLineEdit {"
+        "   background-color:"+ color +";"
+        "}")
+
+    def resetLineEdit(self) -> None:
+        self.setLineEditColor("#FFFFFF")
+        self.answerLineEdit.clear()
 
     def buzzed(self, status: bool) -> None:
         self.isBuzzed = status
@@ -216,6 +218,16 @@ class QuestionPrompt(QWidget):
             TKN.TKN:TKN.PLAYER_BUZZ,
             KEY.STATUS:status
         }, True)
+
+    def keyPressEvent(self, event) -> None:
+        if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
+            if self.isBuzzed:
+                self.buzzed(False)
+                self.mainScreen.gui.submitAnswer()
+        if event.key() == Qt.Key.Key_Space:
+            self.buzzed(True)
+        event.accept()
+    
 
 # Widget that holds the game board with all the buttons
 class Board(QWidget):
@@ -370,12 +382,29 @@ class Client():
                 self.gui.mainScreen.board.label_6.setText(self.categories[5])
             
             elif token == TKN.SERVER_QUESTION_SELECT:
-                self.gui.mainScreen.questionPrompt.questionLabel.setText(responseJSON[KEY.QUESTION])
+                self.gui.mainScreen.questionPrompt.questionLabel.setText(responseJSON[KEY.ANSWER])
                 self.gui.mainScreen.promptThread.start()
 
+            elif token == TKN.ANSWER_RESPONSE:
+                updateThread = threading.Thread(target=self.handleAnswerReponse, args=(responseJSON, ))
+                updateThread.start()
 
             elif token == TKN.PLAYER_ANSWER:
-                self.gui.mainScreen.promptThread.start()
+                self.gui.mainScreen.questionPrompt.answerLineEdit.setText(responseJSON[KEY.ANSWER])
+
+    def handleAnswerReponse(self, responseJSON: dict) -> None:
+        if responseJSON[KEY.STATUS]:
+                self.gui.mainScreen.questionPrompt.setLineEditColor("#00FF00")
+        else:
+            self.gui.mainScreen.questionPrompt.setLineEditColor("#FF0000")
+
+        time.sleep(2)
+        if self.playerNum == responseJSON[KEY.PLAYER_NUM]:
+            self.send({TKN.TKN:TKN.PLAYER_UPDATE})
+        if responseJSON[KEY.STATUS]:
+            self.gui.mainScreen.promptThread.start()
+        self.gui.mainScreen.questionPrompt.resetLineEdit()
+        
 
     # Takes a message and add a header with client info and sends to server
     # Can broadcast to other clients if toBroadcast is set

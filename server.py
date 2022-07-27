@@ -159,6 +159,8 @@ class Server():
             KEY.CATEGORIES:self.categories,
         }).encode())
 
+        currentQuestion = {}
+        currentQuestionValue = 0
         while connected:
             response = serverSocket.recv(self.bufferLength)
             helper.log(response)
@@ -182,8 +184,14 @@ class Server():
                     KEY.ANSWER:self.gameData[msgJSON[KEY.COL]][msgJSON[KEY.ROW]]["answer"],
                 }
                 self.broadcast(json.dumps(questionJSON))
+                currentQuestion = questionJSON
+                currentQuestionValue = (msgJSON[KEY.ROW]+1)*200
 
+            if token == TKN.PLAYER_ANSWER:
+                self.answerRespond(msgJSON, currentQuestion, currentQuestionValue)
 
+            if token == TKN.PLAYER_UPDATE:
+                self.sendPlayerInfo()
 
             if msgJSON[KEY.SEND_TYPE] == VAL.BROADCAST:
                 self.broadcast(response.decode())
@@ -201,6 +209,26 @@ class Server():
             msg = json.dumps(msgJSON).encode()
             player.socket.send(msg)
 
+    def answerRespond(self, answer: dict, question: dict, value: int):
+        time.sleep(1)
+        playerNum = answer[KEY.PLAYER_NUM]
+        msgJSON = {}
+        if answer[KEY.ANSWER] == question[KEY.QUESTION]:
+            self.players[playerNum].score += value
+            msgJSON = {
+                TKN.TKN:TKN.ANSWER_RESPONSE,
+                KEY.STATUS:True,
+                KEY.PLAYER_NUM:playerNum
+            }
+        else:
+            self.players[playerNum].score -= value
+            msgJSON = {
+                TKN.TKN:TKN.ANSWER_RESPONSE,
+                KEY.STATUS:False,
+                KEY.PLAYER_NUM:playerNum
+            }
+        self.broadcast(json.dumps(msgJSON))
+
     def sendPlayerInfo(self):
         msgJSON = {
             TKN.TKN:TKN.PLAYER_UPDATE,
@@ -215,8 +243,6 @@ class Server():
         for player in self.players:
             player.num = num
             num += 1
-
-        
 
     # Closes all of the client and joins all the threads
     def close(self):

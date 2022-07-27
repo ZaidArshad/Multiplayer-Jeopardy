@@ -1,5 +1,7 @@
 TKN = "token"
 TIMEOUT = "timeout"
+LINE_EDIT_UPDATE = "line_edit_update"
+ANSWER_RESPONSE = "answer_response"
 CLIENT_CONNECTED = "client_connected"
 CLIENT_CLOSED = "client_closed"
 SERVER_CATEGORY = "category_sent"
