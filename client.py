@@ -233,7 +233,7 @@ class Board(QWidget):
                     self.mainScreen.gui.chooseQuestion(row, col)))
                 
                 button.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding))
-                self.gridLayout.addWidget(button, row, col)
+                self.gridLayout.addWidget(button, row+1, col)
                 buttons.append(button)
 
 # Has the playercard with the score and name 
