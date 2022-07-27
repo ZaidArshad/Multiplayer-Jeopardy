@@ -374,12 +374,7 @@ class Client():
             
             elif token == TKN.SERVER_CATEGORY:
                 self.categories = responseJSON[KEY.CATEGORIES]
-                self.gui.mainScreen.board.label.setText(self.categories[0])
-                self.gui.mainScreen.board.label_2.setText(self.categories[1])
-                self.gui.mainScreen.board.label_3.setText(self.categories[2])
-                self.gui.mainScreen.board.label_4.setText(self.categories[3])
-                self.gui.mainScreen.board.label_5.setText(self.categories[4])
-                self.gui.mainScreen.board.label_6.setText(self.categories[5])
+                self.assignCategories(self.categories.copy())
             
             elif token == TKN.SERVER_QUESTION_SELECT:
                 self.gui.mainScreen.questionPrompt.questionLabel.setText(responseJSON[KEY.ANSWER])
@@ -404,7 +399,35 @@ class Client():
         if responseJSON[KEY.STATUS]:
             self.gui.mainScreen.promptThread.start()
         self.gui.mainScreen.questionPrompt.resetLineEdit()
-        
+
+    def trimCategory(self, category: str, maxLength: int) -> str:
+        if len(category) <= maxLength:
+            return category
+
+        currentWordLength = 0
+        for i in range(len(category)):
+            c = category[i]
+            if c == " ":
+                currentWordLength = 0
+            if currentWordLength >= maxLength and category[i:len(category)-1] != "":
+                category = category[0:i] + "\n-"+category[i:len(category)-1]
+                currentWordLength = 0
+            currentWordLength += 1
+        print(category)
+        return category
+
+
+    
+    def assignCategories(self, categories: list) -> None:
+        for i in range(len(categories)):
+            categories[i] = self.trimCategory(categories[i], 13)
+
+        self.gui.mainScreen.board.label.setText(categories[0])
+        self.gui.mainScreen.board.label_2.setText(categories[1])
+        self.gui.mainScreen.board.label_3.setText(categories[2])
+        self.gui.mainScreen.board.label_4.setText(categories[3])
+        self.gui.mainScreen.board.label_5.setText(categories[4])
+        self.gui.mainScreen.board.label_6.setText(categories[5])
 
     # Takes a message and add a header with client info and sends to server
     # Can broadcast to other clients if toBroadcast is set

@@ -29,7 +29,7 @@ class Ui_Form(object):
         self.verticalLayout_2.setSpacing(10)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.categoryLabel = QtWidgets.QLabel(Form)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.categoryLabel.sizePolicy().hasHeightForWidth())
@@ -42,6 +42,7 @@ class Ui_Form(object):
 "    color: #FFFFFF;\n"
 "}")
         self.categoryLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.categoryLabel.setWordWrap(True)
         self.categoryLabel.setObjectName("categoryLabel")
         self.verticalLayout_2.addWidget(self.categoryLabel)
         self.verticalWidget = QtWidgets.QWidget(Form)

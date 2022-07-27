@@ -64,7 +64,7 @@ color: white;
    <item>
     <layout class="QGridLayout" name="gridLayout">
      <property name="horizontalSpacing">
-      <number>17</number>
+      <number>12</number>
      </property>
      <property name="verticalSpacing">
       <number>8</number>
@@ -72,10 +72,16 @@ color: white;
      <item row="0" column="4">
       <widget class="QLabel" name="label_5">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+        <sizepolicy hsizetype="Ignored" vsizetype="Minimum">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
        </property>
        <property name="styleSheet">
         <string notr="true">QLabel {
@@ -86,6 +92,9 @@ font-size: 12px;
        </property>
        <property name="text">
         <string>Catergory 5</string>
+       </property>
+       <property name="scaledContents">
+        <bool>false</bool>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
@@ -98,10 +107,16 @@ font-size: 12px;
      <item row="0" column="0">
       <widget class="QLabel" name="label">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+        <sizepolicy hsizetype="Ignored" vsizetype="Minimum">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
        </property>
        <property name="styleSheet">
         <string notr="true">QLabel {
@@ -112,6 +127,9 @@ font-size: 12px;
        </property>
        <property name="text">
         <string>Category 1</string>
+       </property>
+       <property name="scaledContents">
+        <bool>false</bool>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
@@ -124,10 +142,16 @@ font-size: 12px;
      <item row="0" column="1">
       <widget class="QLabel" name="label_2">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+        <sizepolicy hsizetype="Ignored" vsizetype="Minimum">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
        </property>
        <property name="styleSheet">
         <string notr="true">QLabel {
@@ -138,6 +162,9 @@ font-size: 12px;
        </property>
        <property name="text">
         <string>Category 2</string>
+       </property>
+       <property name="scaledContents">
+        <bool>false</bool>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
@@ -150,10 +177,16 @@ font-size: 12px;
      <item row="0" column="3">
       <widget class="QLabel" name="label_4">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+        <sizepolicy hsizetype="Ignored" vsizetype="Minimum">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
        </property>
        <property name="styleSheet">
         <string notr="true">QLabel {
@@ -164,6 +197,9 @@ font-size: 12px;
        </property>
        <property name="text">
         <string>Category 4</string>
+       </property>
+       <property name="scaledContents">
+        <bool>false</bool>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
@@ -176,10 +212,16 @@ font-size: 12px;
      <item row="0" column="2">
       <widget class="QLabel" name="label_3">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+        <sizepolicy hsizetype="Ignored" vsizetype="Minimum">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
        </property>
        <property name="styleSheet">
         <string notr="true">QLabel {
@@ -190,6 +232,9 @@ font-size: 12px;
        </property>
        <property name="text">
         <string>Category 3</string>
+       </property>
+       <property name="scaledContents">
+        <bool>false</bool>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
@@ -202,10 +247,16 @@ font-size: 12px;
      <item row="0" column="5">
       <widget class="QLabel" name="label_6">
        <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+        <sizepolicy hsizetype="Ignored" vsizetype="Minimum">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
        </property>
        <property name="styleSheet">
         <string notr="true">QLabel {
@@ -216,6 +267,9 @@ font-size: 12px;
        </property>
        <property name="text">
         <string>Category 6</string>
+       </property>
+       <property name="scaledContents">
+        <bool>false</bool>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
