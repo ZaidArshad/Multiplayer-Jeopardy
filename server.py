@@ -31,6 +31,8 @@ class Server():
         self.bufferLength = BUFFER
         self.gameData = [[0 for i in range(5)] for j in range(6)]
         self.categories = []
+        self.currentQuestion = {}
+        self.currentQuestionValue = 0
 
     # Binds the server to the given address and start threading
     def start(self, address: tuple[str, int]) -> None:
@@ -159,8 +161,6 @@ class Server():
             KEY.CATEGORIES:self.categories,
         }).encode())
 
-        currentQuestion = {}
-        currentQuestionValue = 0
         while connected:
             response = serverSocket.recv(self.bufferLength)
             helper.log(response)
@@ -184,11 +184,11 @@ class Server():
                     KEY.ANSWER:self.gameData[msgJSON[KEY.COL]][msgJSON[KEY.ROW]]["answer"],
                 }
                 self.broadcast(json.dumps(questionJSON))
-                currentQuestion = questionJSON
-                currentQuestionValue = (msgJSON[KEY.ROW]+1)*200
+                self.currentQuestion = questionJSON
+                self.currentQuestionValue = (msgJSON[KEY.ROW]+1)*200
 
             if token == TKN.PLAYER_ANSWER:
-                self.answerRespond(msgJSON, currentQuestion, currentQuestionValue)
+                self.answerRespond(msgJSON)
 
             if token == TKN.PLAYER_UPDATE:
                 self.sendPlayerInfo()
@@ -209,19 +209,19 @@ class Server():
             msg = json.dumps(msgJSON).encode()
             player.socket.send(msg)
 
-    def answerRespond(self, answer: dict, question: dict, value: int):
+    def answerRespond(self, answer: dict):
         time.sleep(1)
         playerNum = answer[KEY.PLAYER_NUM]
         msgJSON = {}
-        if answer[KEY.ANSWER] == question[KEY.QUESTION]:
-            self.players[playerNum].score += value
+        if answer[KEY.ANSWER] == self.currentQuestion[KEY.QUESTION]:
+            self.players[playerNum].score += self.currentQuestionValue
             msgJSON = {
                 TKN.TKN:TKN.ANSWER_RESPONSE,
                 KEY.STATUS:True,
                 KEY.PLAYER_NUM:playerNum
             }
         else:
-            self.players[playerNum].score -= value
+            self.players[playerNum].score -= self.currentQuestionValue
             msgJSON = {
                 TKN.TKN:TKN.ANSWER_RESPONSE,
                 KEY.STATUS:False,
