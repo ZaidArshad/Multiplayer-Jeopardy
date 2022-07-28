@@ -33,6 +33,7 @@ class Server():
         self.categories = []
         self.currentQuestion = {}
         self.currentQuestionValue = 0
+        self.buzzedInPlayerNum = VAL.NON_PLAYER
 
     # Binds the server to the given address and start threading
     def start(self, address: tuple[str, int]) -> None:
@@ -163,6 +164,7 @@ class Server():
         }).encode())
 
         while connected:
+            isBroadcastEnabled = True
             response = serverSocket.recv(self.bufferLength)
             helper.log(response)
             msgJSON = helper.loadJSON(response)
@@ -194,7 +196,15 @@ class Server():
             if token == TKN.PLAYER_UPDATE:
                 self.sendPlayerInfo()
 
-            if msgJSON[KEY.SEND_TYPE] == VAL.BROADCAST:
+            if token == TKN.PLAYER_BUZZ:
+                if self.buzzedInPlayerNum != VAL.NON_PLAYER and msgJSON[KEY.STATUS]:
+                    isBroadcastEnabled = False
+                if self.buzzedInPlayerNum == msgJSON[KEY.PLAYER_NUM] and not msgJSON[KEY.STATUS]:
+                    self.buzzedInPlayerNum = VAL.NON_PLAYER
+                elif self.buzzedInPlayerNum == VAL.NON_PLAYER:
+                    self.buzzedInPlayerNum = msgJSON[KEY.PLAYER_NUM]
+
+            if msgJSON[KEY.SEND_TYPE] == VAL.BROADCAST and isBroadcastEnabled:
                 self.broadcast(response.decode())
         
         self.listenForConnection()

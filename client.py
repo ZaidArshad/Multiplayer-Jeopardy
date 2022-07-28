@@ -205,6 +205,10 @@ class QuestionPrompt(QWidget):
         loadUi("ui/question_prompt.ui", self)
         self.mainScreen = mainscreen
         self.isBuzzed = False
+        
+        self.answerEditLineThread = AnswerLineEditThread()
+        self.answerEditLineThread.enabledSignal.connect(self.enableEditLine)
+
         self.setFocusPolicy(Qt.StrongFocus)
 
     def setLineEditColor(self, color: str) -> None:
@@ -217,12 +221,14 @@ class QuestionPrompt(QWidget):
         self.answerLineEdit.clear()
 
     def buzzed(self, status: bool) -> None:
-        self.isBuzzed = status
-        self.answerLineEdit.setEnabled(status)
         self.mainScreen.gui.client.send({
             TKN.TKN:TKN.PLAYER_BUZZ,
             KEY.STATUS:status
         }, True)
+
+    def enableEditLine(self, status: bool) -> None:
+        self.isBuzzed = status
+        self.answerLineEdit.setEnabled(status)
 
     def keyPressEvent(self, event) -> None:
         if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
@@ -230,7 +236,8 @@ class QuestionPrompt(QWidget):
                 self.buzzed(False)
                 self.mainScreen.gui.submitAnswer()
         if event.key() == Qt.Key.Key_Space:
-            self.buzzed(True)
+            if not self.isBuzzed:
+                self.buzzed(True)
         event.accept()
     
 
@@ -308,7 +315,7 @@ class PlayerCard():
 
 # Controls the GUI <-> Client <-> Server connection
 class Client():
-    def __init__(self, gui):
+    def __init__(self, gui: GUI):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.gui = gui
         self.bufferLength = BUFFER
@@ -377,6 +384,10 @@ class Client():
                 self.gui.animationThread.isBuzzed =  responseJSON[KEY.STATUS]
                 self.gui.animationThread.playerNum = responseJSON[KEY.PLAYER_NUM]
                 self.gui.animationThread.start()
+
+                if self.playerNum == responseJSON[KEY.PLAYER_NUM]:
+                    self.gui.mainScreen.questionPrompt.answerEditLineThread.status = True
+                    self.gui.mainScreen.questionPrompt.answerEditLineThread.start()
             
             elif token == TKN.SERVER_CATEGORY:
                 self.categories = responseJSON[KEY.CATEGORIES]
@@ -391,6 +402,8 @@ class Client():
                 updateThread.start()
 
             elif token == TKN.PLAYER_ANSWER:
+                self.gui.mainScreen.questionPrompt.answerEditLineThread.status = False
+                self.gui.mainScreen.questionPrompt.answerEditLineThread.start()
                 self.gui.mainScreen.questionPrompt.answerLineEdit.setText(responseJSON[KEY.ANSWER])
 
             elif token == TKN.PLAYER_TURN:
@@ -474,6 +487,13 @@ class PromptThread(QThread):
     togglePromptSignal = pyqtSignal()
     def run(self):
         self.togglePromptSignal.emit()
+
+class AnswerLineEditThread(QThread):
+    enabledSignal = pyqtSignal(bool)
+    status = False
+    def run(self):
+        self.enabledSignal.emit(self.status)
+
 
 if __name__ == "__main__":
     gui = GUI()
