@@ -182,7 +182,8 @@ class Server():
             if token == TKN.PLAYER_QUESTION_SELECT:
                 questionJSON = {
                     TKN.TKN:TKN.SERVER_QUESTION_SELECT,
-                    #KEY.QUESTION:"Question "+str(msgJSON[KEY.ROW])+","+str(msgJSON[KEY.COL]),
+                    KEY.ROW:msgJSON[KEY.ROW],
+                    KEY.COL:msgJSON[KEY.COL],
                     KEY.QUESTION:self.gameData[msgJSON[KEY.COL]][msgJSON[KEY.ROW]]["question"],
                     KEY.ANSWER:self.gameData[msgJSON[KEY.COL]][msgJSON[KEY.ROW]]["answer"],
                 }
@@ -229,7 +230,9 @@ class Server():
             msgJSON = {
                 TKN.TKN:TKN.ANSWER_RESPONSE,
                 KEY.STATUS:True,
-                KEY.PLAYER_NUM:playerNum
+                KEY.PLAYER_NUM:playerNum,
+                KEY.ROW:self.currentQuestion[KEY.ROW],
+                KEY.COL:self.currentQuestion[KEY.COL]
             }
         else:
             self.players[playerNum].score -= self.currentQuestionValue

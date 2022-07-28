@@ -250,18 +250,17 @@ class Board(QWidget):
         super(Board, self).__init__()
         loadUi("ui/board.ui", self)
         self.mainScreen = mainscreen
-        buttons = []
+        self.buttons = [[0 for i in range(5)] for j in range(6)]
 
-        for row in range(5):
-            for col in range(6):
+        for col in range(6):
+            for row in range(5):
                 button = QPushButton()
                 button.setText("$" + str((row+1)*200))
                 button.clicked.connect(lambda state, row=row, col=col:(
                     self.mainScreen.gui.chooseQuestion(row, col)))
-                
                 button.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding))
                 self.gridLayout.addWidget(button, row+1, col)
-                buttons.append(button)
+                self.buttons[col][row] = button
 
 # Has the playercard with the score and name 
 class PlayerCard():
@@ -429,6 +428,7 @@ class Client():
     def handleAnswerReponse(self, responseJSON: dict) -> None:
         if responseJSON[KEY.STATUS]:
                 self.gui.mainScreen.questionPrompt.setLineEditColor("#00FF00")
+                self.gui.mainScreen.board.buttons[responseJSON[KEY.COL]][responseJSON[KEY.ROW]].hide()
         else:
             self.gui.mainScreen.questionPrompt.setLineEditColor("#FF0000")
 
