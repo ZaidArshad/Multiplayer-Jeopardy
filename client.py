@@ -79,6 +79,7 @@ class GUI():
             KEY.COL:col
         }
         self.mainScreen.questionPrompt.categoryLabel.setText(self.client.categories[col])
+        self.mainScreen.questionPrompt.readyToAnswer = False
         self.client.send(questionSelectionJSON)
 
     # Creates and formats window and widgets for GUI
@@ -205,6 +206,7 @@ class QuestionPrompt(QWidget):
         loadUi("ui/question_prompt.ui", self)
         self.mainScreen = mainscreen
         self.isBuzzed = False
+        self.readyToAnswer = False
         
         self.answerEditLineThread = AnswerLineEditThread()
         self.answerEditLineThread.enabledSignal.connect(self.enableEditLine)
@@ -234,9 +236,10 @@ class QuestionPrompt(QWidget):
         if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
             if self.isBuzzed:
                 self.buzzed(False)
+                time.sleep(1)
                 self.mainScreen.gui.submitAnswer()
         if event.key() == Qt.Key.Key_Space:
-            if not self.isBuzzed:
+            if not self.isBuzzed and self.readyToAnswer:
                 self.buzzed(True)
         event.accept()
     
@@ -394,8 +397,18 @@ class Client():
                 self.assignCategories(self.categories.copy())
             
             elif token == TKN.SERVER_QUESTION_SELECT:
+                self.gui.mainScreen.questionPrompt.timerLabel.show()
                 self.gui.mainScreen.questionPrompt.questionLabel.setText(responseJSON[KEY.ANSWER])
+                self.gui.mainScreen.questionPrompt.answerLineEdit.hide()
                 self.gui.mainScreen.promptThread.start()
+                #Start the timer to allow time for the players to read the question
+                for i in range(6):
+                    self.gui.mainScreen.questionPrompt.timerLabel.setText(str(5-i))
+                    time.sleep(1)
+                self.gui.mainScreen.questionPrompt.timerLabel.hide()
+                self.gui.mainScreen.questionPrompt.timerLabel.setText(str(5))
+                self.gui.mainScreen.questionPrompt.answerLineEdit.show()
+                self.gui.mainScreen.questionPrompt.readyToAnswer = True
 
             elif token == TKN.ANSWER_RESPONSE:
                 updateThread = threading.Thread(target=self.handleAnswerReponse, args=(responseJSON, ))

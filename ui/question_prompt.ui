@@ -144,7 +144,7 @@ QLineEdit {
 }</string>
         </property>
         <property name="text">
-         <string>0:30</string>
+         <string>5</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
