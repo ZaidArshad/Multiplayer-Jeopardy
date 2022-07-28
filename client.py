@@ -253,12 +253,14 @@ class Board(QWidget):
         self.buttons = [[0 for i in range(5)] for j in range(6)]
 
         for col in range(6):
-            for row in range(5):
+            for row in range(2):
                 button = QPushButton()
+                sizePolicy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+                sizePolicy.setRetainSizeWhenHidden(True)
+                button.setSizePolicy(sizePolicy)
                 button.setText("$" + str((row+1)*200))
                 button.clicked.connect(lambda state, row=row, col=col:(
                     self.mainScreen.gui.chooseQuestion(row, col)))
-                button.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding))
                 self.gridLayout.addWidget(button, row+1, col)
                 self.buttons[col][row] = button
 
