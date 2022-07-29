@@ -1,11 +1,6 @@
 [
     {
         "token": "player_join",
-        "player_num": 0,
-        "player_name": "name"
-    },
-    {
-        "token": "player_join",
         "send_type": "client",
         "player_num": 0,
         "player_name": "Temp Name",

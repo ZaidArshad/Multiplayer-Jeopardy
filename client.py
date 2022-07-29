@@ -333,7 +333,7 @@ class Client():
         # Try to connect to the server
         try:
             self.socket.connect(address)
-            responseJson = self.recieve()
+            responseJson = self.receive()
             self.playerNum = responseJson[KEY.PLAYER_NUM]
 
             if responseJson[KEY.STATUS]:
@@ -346,7 +346,7 @@ class Client():
                 }
                 self.socket.send(json.dumps(msgJSON).encode())
 
-                responseJson = self.recieve()
+                responseJson = self.receive()
                 self.gui.updatePlayers(responseJson)
 
                 # Starts the thread for listening to the server
@@ -361,7 +361,7 @@ class Client():
             self.gui.loginScreen.errorLabel.setText("Server Error")
 
     # Listens to the server for a block of data
-    def recieve(self) -> dict:
+    def receive(self) -> dict:
         response = self.socket.recv(self.bufferLength)
         helper.log(response)
         responseJson = helper.loadJSON(response)
@@ -371,7 +371,7 @@ class Client():
     # Repeatedly listens to the server for any messages
     def listeningThread(self) -> None:
         while self.connected:
-            responseJSON = self.recieve()
+            responseJSON = self.receive()
             gui.mainScreen.debugLabel.setText(json.dumps(responseJSON)+"\n"+gui.mainScreen.debugLabel.text())
 
             token = responseJSON[TKN.TKN]
