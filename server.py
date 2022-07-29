@@ -192,6 +192,7 @@ class Server():
 
             if token == TKN.PLAYER_ANSWER:
                 self.answerRespond(msgJSON)
+                isBroadcastEnabled = False
 
             if token == TKN.PLAYER_UPDATE:
                 self.sendPlayerInfo()
@@ -221,13 +222,14 @@ class Server():
             player.socket.send(msg)
 
     def answerRespond(self, answer: dict):
-        time.sleep(2)
         playerNum = answer[KEY.PLAYER_NUM]
+        question = self.currentQuestion[KEY.QUESTION]
         msgJSON = {}
         if (answer[KEY.ANSWER].lower()).strip() == (self.currentQuestion[KEY.QUESTION].lower()).strip():
             self.players[playerNum].score += self.currentQuestionValue
             msgJSON = {
                 TKN.TKN:TKN.ANSWER_RESPONSE,
+                KEY.ANSWER:question,
                 KEY.STATUS:True,
                 KEY.PLAYER_NUM:playerNum,
                 KEY.ROW:self.currentQuestion[KEY.ROW],
@@ -237,6 +239,7 @@ class Server():
             self.players[playerNum].score -= self.currentQuestionValue
             msgJSON = {
                 TKN.TKN:TKN.ANSWER_RESPONSE,
+                KEY.ANSWER:question,
                 KEY.STATUS:False,
                 KEY.PLAYER_NUM:playerNum
             }

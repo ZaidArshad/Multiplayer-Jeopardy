@@ -418,6 +418,9 @@ class Client():
             elif token == TKN.ANSWER_RESPONSE:
                 updateThread = threading.Thread(target=self.handleAnswerReponse, args=(responseJSON, ))
                 updateThread.start()
+                self.gui.mainScreen.questionPrompt.answerEditLineThread.status = False
+                self.gui.mainScreen.questionPrompt.answerEditLineThread.start()
+                self.gui.mainScreen.questionPrompt.answerLineEdit.setText(responseJSON[KEY.ANSWER])
 
             elif token == TKN.PLAYER_ANSWER:
                 self.gui.mainScreen.questionPrompt.answerEditLineThread.status = False
