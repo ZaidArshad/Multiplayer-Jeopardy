@@ -224,7 +224,7 @@ class Server():
         time.sleep(2)
         playerNum = answer[KEY.PLAYER_NUM]
         msgJSON = {}
-        if answer[KEY.ANSWER] == self.currentQuestion[KEY.QUESTION]:
+        if (answer[KEY.ANSWER].lower()).strip() == (self.currentQuestion[KEY.QUESTION].lower()).strip():
             self.players[playerNum].score += self.currentQuestionValue
             msgJSON = {
                 TKN.TKN:TKN.ANSWER_RESPONSE,

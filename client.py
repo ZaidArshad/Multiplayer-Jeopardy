@@ -206,6 +206,7 @@ class QuestionPrompt(QWidget):
         self.mainScreen = mainscreen
         self.isBuzzed = False
         self.readyToAnswer = False
+        self.hasGuessed = False
         
         self.answerEditLineThread = AnswerLineEditThread()
         self.answerEditLineThread.enabledSignal.connect(self.enableEditLine)
@@ -235,11 +236,13 @@ class QuestionPrompt(QWidget):
         if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
             if self.isBuzzed:
                 self.buzzed(False)
+                self.readyToAnswer = False
                 time.sleep(1)
                 self.mainScreen.gui.submitAnswer()
         if event.key() == Qt.Key.Key_Space:
-            if not self.isBuzzed and self.readyToAnswer:
+            if not self.isBuzzed and self.readyToAnswer and not self.hasGuessed:
                 self.buzzed(True)
+                self.hasGuessed = True
         event.accept()
     
 
@@ -410,6 +413,7 @@ class Client():
                 self.gui.mainScreen.questionPrompt.timerLabel.setText(str(5))
                 self.gui.mainScreen.questionPrompt.answerLineEdit.show()
                 self.gui.mainScreen.questionPrompt.readyToAnswer = True
+                self.gui.mainScreen.questionPrompt.hasGuessed = False
 
             elif token == TKN.ANSWER_RESPONSE:
                 updateThread = threading.Thread(target=self.handleAnswerReponse, args=(responseJSON, ))
@@ -439,6 +443,8 @@ class Client():
         if responseJSON[KEY.STATUS]:
             self.gui.mainScreen.promptThread.start()
         self.gui.mainScreen.questionPrompt.resetLineEdit()
+        self.gui.mainScreen.questionPrompt.readyToAnswer = True
+        #self.gui.mainScreen.questionPrompt.placeholderText.setText("You have already guessed!")
 
     def trimCategory(self, category: str, maxLength: int) -> str:
         if len(category) <= maxLength:
