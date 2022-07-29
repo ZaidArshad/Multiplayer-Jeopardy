@@ -16,7 +16,6 @@ from PyQt5.QtGui import QPalette, QColor
 from PyQt5 import QtTest
 
 print("TCP Client")
-ADDRESS = ("127.0.0.1", 8080)
 BUFFER = 1024
 
 UI_WIDTH = 700
@@ -113,7 +112,7 @@ class GUI():
             self.loginScreen.errorLabel.setText("Please insert a username.")
             return
 
-        connectionThread = threading.Thread(target=self.client.connect, args=(ADDRESS, self.loginScreen.usernameLineEdit.text()))
+        connectionThread = threading.Thread(target=self.client.connect, args=(VAL.ADDRESS, self.loginScreen.usernameLineEdit.text()))
         self.threads.append(connectionThread)
         connectionThread.start()
 
@@ -236,7 +235,6 @@ class QuestionPrompt(QWidget):
         if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
             if self.isBuzzed:
                 self.buzzed(False)
-                time.sleep(1)
                 self.mainScreen.gui.submitAnswer()
         if event.key() == Qt.Key.Key_Space:
             if not self.isBuzzed and self.readyToAnswer:
@@ -253,7 +251,7 @@ class Board(QWidget):
         self.buttons = [[0 for i in range(5)] for j in range(6)]
 
         for col in range(6):
-            for row in range(2):
+            for row in range(5):
                 button = QPushButton()
                 sizePolicy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
                 sizePolicy.setRetainSizeWhenHidden(True)
@@ -399,6 +397,7 @@ class Client():
             
             elif token == TKN.SERVER_QUESTION_SELECT:
                 self.gui.mainScreen.questionPrompt.timerLabel.show()
+                self.gui.mainScreen.questionPrompt.categoryLabel.setText(self.categories[responseJSON[KEY.COL]])
                 self.gui.mainScreen.questionPrompt.questionLabel.setText(responseJSON[KEY.ANSWER])
                 self.gui.mainScreen.questionPrompt.answerLineEdit.hide()
                 self.gui.mainScreen.promptThread.start()
@@ -425,7 +424,6 @@ class Client():
                     self.turn = True
                 else:
                     self.turn = False
-
 
     def handleAnswerReponse(self, responseJSON: dict) -> None:
         if responseJSON[KEY.STATUS]:
@@ -454,7 +452,6 @@ class Client():
                 category = category[0:i] + "\n-"+category[i:len(category)-1]
                 currentWordLength = 0
             currentWordLength += 1
-        print(category)
         return category
 
 

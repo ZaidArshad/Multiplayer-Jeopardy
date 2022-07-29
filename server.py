@@ -20,7 +20,6 @@ import queue
 import random
 
 print("TCP Server")
-ADDRESS = ("127.0.0.1", 8080)
 BUFFER = 1024
 
 class Server():
@@ -81,11 +80,11 @@ class Server():
             startTime = time.time()
             threadQueue = queue.Queue()
             
-            buzzTimerThread = threading.Thread(target=self.startBuzzerTimer, args=(timeToBuzzInSeconds, startTime, threadQueue))
-            listenForBuzzThread = threading.Thread(target=self.listenForBuzz, args=(self.socket, threadQueue))
+            # buzzTimerThread = threading.Thread(target=self.startBuzzerTimer, args=(timeToBuzzInSeconds, startTime, threadQueue))
+            # listenForBuzzThread = threading.Thread(target=self.listenForBuzz, args=(self.socket, threadQueue))
             
-            buzzTimerThread.start()
-            listenForBuzzThread.start()
+            # buzzTimerThread.start()
+            # listenForBuzzThread.start()
             
             # Waits until one of the two threads to finish
             tokenReceived = threadQueue.get()
@@ -293,5 +292,5 @@ class Server():
         
 if __name__ == "__main__":
     server = Server()
-    server.start(ADDRESS)
+    server.start(VAL.ADDRESS)
     
