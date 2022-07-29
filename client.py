@@ -235,6 +235,7 @@ class QuestionPrompt(QWidget):
         if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
             if self.isBuzzed:
                 self.buzzed(False)
+                time.sleep(1)
                 self.mainScreen.gui.submitAnswer()
         if event.key() == Qt.Key.Key_Space:
             if not self.isBuzzed and self.readyToAnswer:
