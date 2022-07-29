@@ -221,7 +221,7 @@ class Server():
             player.socket.send(msg)
 
     def answerRespond(self, answer: dict):
-        time.sleep(1)
+        time.sleep(2)
         playerNum = answer[KEY.PLAYER_NUM]
         msgJSON = {}
         if answer[KEY.ANSWER] == self.currentQuestion[KEY.QUESTION]:
