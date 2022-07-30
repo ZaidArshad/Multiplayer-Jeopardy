@@ -1,4 +1,5 @@
 # TCP Client
+from datetime import timedelta
 import time
 import helper
 import json
@@ -43,6 +44,11 @@ class GUI():
         self.animationThread = AnimationThread()
         self.animationThread.buzzSignal.connect(self.buzzPlayer)
         self.animationThread.unBuzzSignal.connect(self.unBuzzPlayer)
+
+        self.interfaceUpdateThread = InterfaceUpdateThread()
+        self.interfaceUpdateThread.answerLineEditSignal.connect(
+            self.mainScreen.questionPrompt.answerLineEdit.setText)
+        self.interfaceUpdateThread.playerCardSignal.connect(self.updatePlayers)
 
     def buzzPlayer(self, playerNum: int) -> None:
         self.mainScreen.playerCards[playerNum].buzzedIn()
@@ -157,7 +163,7 @@ class LoginScreen(QDialog):
 
 # Has the main screen with players and board
 class MainScreen(QDialog):
-    def __init__(self, gui):
+    def __init__(self, gui: GUI):
         super(MainScreen, self).__init__()
         self.gui = gui
         loadUi("ui/main_screen.ui", self)
@@ -208,10 +214,36 @@ class QuestionPrompt(QWidget):
         self.readyToAnswer = False
         self.hasGuessed = False
         
-        self.answerEditLineThread = AnswerLineEditThread()
-        self.answerEditLineThread.enabledSignal.connect(self.enableEditLine)
+        self.answerLineEditThread = AnswerLineEditThread()
+        self.answerLineEditThread.enabledSignal.connect(self.enableAnswerLineEdit)
+
+        self.buzzTimerThread = TimerThread()
+        self.buzzTimerThread.displaySignal.connect(self.updateTimer)
+        self.buzzTimerThread.finishedSignal.connect(self.enableGuessing)
+
+        self.guessTimerThread = TimerThread()
+        self.guessTimerThread.displaySignal.connect(self.updateTimer)
+        self.guessTimerThread.finishedSignal.connect(self.terminateGuessing)
+
+        self.answerTimerThread = TimerThread()
+        self.answerTimerThread.displaySignal.connect(self.updateTimer)
+        self.answerTimerThread.finishedSignal.connect(self.answer)
 
         self.setFocusPolicy(Qt.StrongFocus)
+
+    def updateTimer(self, time: int) -> None:
+        self.timerLabel.setText(str(time))
+    
+    def terminateGuessing(self) -> None:
+        if self.mainScreen.gui.client.playerNum == 0:
+            self.mainScreen.gui.submitToken(TKN.GUESS_TIMEOUT)
+
+    def enableGuessing(self):
+        self.guessTimerThread.timeLength = 15
+        self.guessTimerThread.start()
+        self.answerLineEdit.show()
+        self.readyToAnswer = True
+        self.hasGuessed = False
 
     def setLineEditColor(self, color: str) -> None:
         self.setStyleSheet("QLineEdit {"
@@ -228,17 +260,20 @@ class QuestionPrompt(QWidget):
             KEY.STATUS:status
         }, True)
 
-    def enableEditLine(self, status: bool) -> None:
+    def enableAnswerLineEdit(self, status: bool) -> None:
         self.isBuzzed = status
         self.answerLineEdit.setEnabled(status)
 
+    def answer(self):
+        if self.isBuzzed:
+            self.buzzed(False)
+            time.sleep(2)
+            self.readyToAnswer = False
+            self.mainScreen.gui.submitAnswer()
+
     def keyPressEvent(self, event) -> None:
         if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
-            if self.isBuzzed:
-                self.buzzed(False)
-                self.readyToAnswer = False
-                time.sleep(1)
-                self.mainScreen.gui.submitAnswer()
+            self.answer()
         if event.key() == Qt.Key.Key_Space:
             if not self.isBuzzed and self.readyToAnswer and not self.hasGuessed:
                 self.buzzed(True)
@@ -380,52 +415,38 @@ class Client():
             token = responseJSON[TKN.TKN]
 
             if token == TKN.PLAYER_UPDATE:
-                updateThread = threading.Thread(target=self.gui.updatePlayers, args=(responseJSON, ))
-                updateThread.start()
+                self.gui.interfaceUpdateThread.setPlayerCardData(responseJSON)
 
             elif token == TKN.CLIENT_CLOSED and self.playerNum == responseJSON[KEY.PLAYER_NUM]:
                 self.connected = False
 
             elif token == TKN.PLAYER_BUZZ:
-                self.gui.animationThread.isBuzzed =  responseJSON[KEY.STATUS]
-                self.gui.animationThread.playerNum = responseJSON[KEY.PLAYER_NUM]
-                self.gui.animationThread.start()
-
-                if self.playerNum == responseJSON[KEY.PLAYER_NUM]:
-                    self.gui.mainScreen.questionPrompt.answerEditLineThread.status = True
-                    self.gui.mainScreen.questionPrompt.answerEditLineThread.start()
+                handleThread = threading.Thread(target=self.handleBuzz, args=(responseJSON, ))
+                handleThread.start()
             
             elif token == TKN.SERVER_CATEGORY:
                 self.categories = responseJSON[KEY.CATEGORIES]
                 self.assignCategories(self.categories.copy())
             
             elif token == TKN.SERVER_QUESTION_SELECT:
-                self.gui.mainScreen.questionPrompt.timerLabel.show()
-                self.gui.mainScreen.questionPrompt.categoryLabel.setText(self.categories[responseJSON[KEY.COL]])
-                self.gui.mainScreen.questionPrompt.questionLabel.setText(responseJSON[KEY.ANSWER])
-                self.gui.mainScreen.questionPrompt.answerLineEdit.hide()
+                self.initializePrompt(self.categories[responseJSON[KEY.COL]], responseJSON[KEY.ANSWER])
                 self.gui.mainScreen.promptThread.start()
+                
                 #Start the timer to allow time for the players to read the question
-                for i in range(6):
-                    self.gui.mainScreen.questionPrompt.timerLabel.setText(str(5-i))
-                    time.sleep(1)
-                self.gui.mainScreen.questionPrompt.timerLabel.hide()
-                self.gui.mainScreen.questionPrompt.timerLabel.setText(str(5))
-                self.gui.mainScreen.questionPrompt.answerLineEdit.show()
-                self.gui.mainScreen.questionPrompt.readyToAnswer = True
-                self.gui.mainScreen.questionPrompt.hasGuessed = False
+                self.gui.mainScreen.questionPrompt.buzzTimerThread.timeLength = 5
+                self.gui.mainScreen.questionPrompt.buzzTimerThread.start()
 
             elif token == TKN.ANSWER_RESPONSE:
-                updateThread = threading.Thread(target=self.handleAnswerReponse, args=(responseJSON, ))
-                updateThread.start()
-                self.gui.mainScreen.questionPrompt.answerEditLineThread.status = False
-                self.gui.mainScreen.questionPrompt.answerEditLineThread.start()
-                self.gui.mainScreen.questionPrompt.answerLineEdit.setText(responseJSON[KEY.ANSWER])
+                handleThread = threading.Thread(target=self.handleAnswerResponse, args=(responseJSON, ))
+                handleThread.start()
+                self.gui.mainScreen.questionPrompt.answerLineEditThread.status = False
+                self.gui.mainScreen.questionPrompt.answerLineEditThread.start()
+                self.gui.interfaceUpdateThread.setAnswerLineEditText(responseJSON[KEY.ANSWER])
 
             elif token == TKN.PLAYER_ANSWER:
-                self.gui.mainScreen.questionPrompt.answerEditLineThread.status = False
-                self.gui.mainScreen.questionPrompt.answerEditLineThread.start()
-                self.gui.mainScreen.questionPrompt.answerLineEdit.setText(responseJSON[KEY.ANSWER])
+                self.gui.mainScreen.questionPrompt.answerLineEditThread.status = False
+                self.gui.mainScreen.questionPrompt.answerLineEditThread.start()
+                self.gui.interfaceUpdateThread.setAnswerLineEditText(responseJSON[KEY.ANSWER])
 
             elif token == TKN.PLAYER_TURN:
                 if self.playerNum == responseJSON[KEY.CURRENT_PLAYER_TURN]:
@@ -433,20 +454,43 @@ class Client():
                 else:
                     self.turn = False
 
-    def handleAnswerReponse(self, responseJSON: dict) -> None:
+    def initializePrompt(self, category: str, question: str) -> None:
+        self.gui.mainScreen.questionPrompt.timerLabel.show()
+        self.gui.mainScreen.questionPrompt.categoryLabel.setText(category)
+        self.gui.mainScreen.questionPrompt.questionLabel.setText(question)
+        self.gui.mainScreen.questionPrompt.answerLineEdit.hide()
+
+    def handleBuzz(self, responseJSON: dict):
+        self.gui.animationThread.isBuzzed =  responseJSON[KEY.STATUS]
+        self.gui.animationThread.playerNum = responseJSON[KEY.PLAYER_NUM]
+        self.gui.mainScreen.questionPrompt.guessTimerThread.terminate()
+        self.gui.mainScreen.questionPrompt.answerTimerThread.timeLength = 15
+        self.gui.mainScreen.questionPrompt.answerTimerThread.start()
+        self.gui.animationThread.start()
+
+        if self.playerNum == responseJSON[KEY.PLAYER_NUM]:
+            self.gui.mainScreen.questionPrompt.answerLineEditThread.status = True
+            self.gui.mainScreen.questionPrompt.answerLineEditThread.start()
+        else:
+            self.gui.mainScreen.questionPrompt.readyToAnswer = False
+
+    def handleAnswerResponse(self, responseJSON: dict) -> None:
+        self.gui.mainScreen.questionPrompt.answerTimerThread.terminate()
         if responseJSON[KEY.STATUS]:
                 self.gui.mainScreen.questionPrompt.setLineEditColor("#00FF00")
                 self.gui.mainScreen.board.buttons[responseJSON[KEY.COL]][responseJSON[KEY.ROW]].hide()
         else:
             self.gui.mainScreen.questionPrompt.setLineEditColor("#FF0000")
+            self.gui.mainScreen.questionPrompt.guessTimerThread.start()
 
         time.sleep(2)
         if self.playerNum == responseJSON[KEY.PLAYER_NUM]:
             self.send({TKN.TKN:TKN.PLAYER_UPDATE})
         if responseJSON[KEY.STATUS]:
             self.gui.mainScreen.promptThread.start()
+        else:
+            self.gui.mainScreen.questionPrompt.readyToAnswer = True
         self.gui.mainScreen.questionPrompt.resetLineEdit()
-        self.gui.mainScreen.questionPrompt.readyToAnswer = True
         #self.gui.mainScreen.questionPrompt.placeholderText.setText("You have already guessed!")
 
     def trimCategory(self, category: str, maxLength: int) -> str:
@@ -513,8 +557,61 @@ class PromptThread(QThread):
 class AnswerLineEditThread(QThread):
     enabledSignal = pyqtSignal(bool)
     status = False
+
+    displayedDisplay = pyqtSignal(str)
+    text = ""
     def run(self):
         self.enabledSignal.emit(self.status)
+        self.enabledSignal.emit(self.status)
+
+
+class TimerThread(QThread):
+    timeLength = 0
+    displaySignal = pyqtSignal(int)
+    finishedSignal = pyqtSignal()
+    def run(self) -> None:
+        self.displaySignal.emit(self.timeLength)
+        for seconds in range(self.timeLength):
+            time.sleep(1)
+            elapsed = self.timeLength - seconds - 1
+            self.displaySignal.emit(elapsed)
+            
+        self.timeLength = 0
+        self.finishedSignal.emit()
+
+class InterfaceUpdateThread(QThread):
+    update = [False]*2
+
+    answerLineEditSignal = pyqtSignal(str)
+    answerLineEditText = ""
+
+    playerCardSignal = pyqtSignal(object)
+    playerCardData = {}
+
+    def run(self):
+        if self.update[0]:
+            self.answerLineEditSignal.emit(self.answerLineEditText)
+
+        if self.update[1]:   
+            self.playerCardSignal.emit(self.playerCardData)
+
+        self.update = [False]*2
+
+    def setAnswerLineEditText(self, text: str):
+        self.update[0] = True
+        self.answerLineEditText = text
+        self.start()
+
+    def setPlayerCardData(self, data: object):
+        self.update[1] = True
+        self.playerCardData = data
+        self.start()
+
+    
+
+
+
+
 
 
 if __name__ == "__main__":

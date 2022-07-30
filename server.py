@@ -197,6 +197,9 @@ class Server():
             if token == TKN.PLAYER_UPDATE:
                 self.sendPlayerInfo()
 
+            if token == TKN.GUESS_TIMEOUT:
+                self.noGuess()
+
             if token == TKN.PLAYER_BUZZ:
                 if self.buzzedInPlayerNum != VAL.NON_PLAYER and msgJSON[KEY.STATUS]:
                     isBroadcastEnabled = False
@@ -221,15 +224,25 @@ class Server():
             msg = json.dumps(msgJSON).encode()
             player.socket.send(msg)
 
+    def noGuess(self):
+        msgJSON = {
+                TKN.TKN:TKN.ANSWER_RESPONSE,
+                KEY.ANSWER:self.currentQuestion[KEY.QUESTION],
+                KEY.STATUS:True,
+                KEY.PLAYER_NUM:VAL.NON_PLAYER,
+                KEY.ROW:self.currentQuestion[KEY.ROW],
+                KEY.COL:self.currentQuestion[KEY.COL]
+            }
+        self.broadcast(json.dumps(msgJSON))
+
     def answerRespond(self, answer: dict):
         playerNum = answer[KEY.PLAYER_NUM]
-        question = self.currentQuestion[KEY.QUESTION]
         msgJSON = {}
         if (answer[KEY.ANSWER].lower()).strip() == (self.currentQuestion[KEY.QUESTION].lower()).strip():
             self.players[playerNum].score += self.currentQuestionValue
             msgJSON = {
                 TKN.TKN:TKN.ANSWER_RESPONSE,
-                KEY.ANSWER:question,
+                KEY.ANSWER:answer[KEY.ANSWER],
                 KEY.STATUS:True,
                 KEY.PLAYER_NUM:playerNum,
                 KEY.ROW:self.currentQuestion[KEY.ROW],
@@ -239,7 +252,7 @@ class Server():
             self.players[playerNum].score -= self.currentQuestionValue
             msgJSON = {
                 TKN.TKN:TKN.ANSWER_RESPONSE,
-                KEY.ANSWER:question,
+                KEY.ANSWER:answer[KEY.ANSWER],
                 KEY.STATUS:False,
                 KEY.PLAYER_NUM:playerNum
             }

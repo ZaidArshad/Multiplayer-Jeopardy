@@ -34,8 +34,14 @@ PLAYER_QUESTION_SELECT = "player_question_select"
 # Has the question prompt, row, col and answer
 SERVER_QUESTION_SELECT = "server_question_select"
 
+# Inform the server that the time to guess has expired
+GUESS_TIMEOUT = "guess_timeout"
+
+# ACK
+ACK = "ack"
+
 # Unused
-TIMEOUT = "timeout"
+
 PLAYER_TURN = "player_turn"
 LINE_EDIT_UPDATE = "line_edit_update"
 BUZZ_TIME_OVER = "buzz_time_over"
