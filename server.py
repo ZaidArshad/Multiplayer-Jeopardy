@@ -1,7 +1,10 @@
 # TCP Server
 from datetime import datetime
 import json
+from logging import raiseExceptions
+from optparse import Values
 import socket
+from turtle import right
 
 #from numpy import broadcast
 import helper
@@ -11,10 +14,6 @@ from strings import *
 import tokens as TKN
 import values as VAL
 import keys as KEY
-
-# Buzzer and timer
-import time
-import queue
 
 #To generate a random game
 import random
@@ -60,63 +59,6 @@ class Server():
                 questionIndex+=1
         self.listenForConnection()
 
-        # Assumption: Player 1 goes first to choose a question
-        currentPlayerTurn = '{"token" : "player_turn", "current_player_turn" : 0}'
-
-        # Change to "while jeopardy board is not empty" here
-        while True:
-            # Show and update Jeopardy Board to player
-
-            # Tell all client whose turn it is for selecting question
-            self.broadcast(currentPlayerTurn)
-            # Listen to that player question selection - THIS HAS BEEN DONE!
-
-            # Broadcast chosen question - THIS HAS BEEN DONE!
-
-            # Start timer to read question while denying any buzzer 
-
-            # After time to read ends, allow buzzer tokens and start another timer for buzzing time
-            timeToBuzzInSeconds = 5
-            startTime = time.time()
-            threadQueue = queue.Queue()
-            
-            # buzzTimerThread = threading.Thread(target=self.startBuzzerTimer, args=(timeToBuzzInSeconds, startTime, threadQueue))
-            # listenForBuzzThread = threading.Thread(target=self.listenForBuzz, args=(self.socket, threadQueue))
-            
-            # buzzTimerThread.start()
-            # listenForBuzzThread.start()
-            
-            # Waits until one of the two threads to finish
-            tokenReceived = threadQueue.get()
-            
-            # DELETE THIS WHEN TESTING IS DONE
-            print("Result: {}".format(tokenReceived))
-            
-            # Time to Buzz is over
-            if (tokenReceived[TKN.TKN] == TKN.BUZZ_TIME_OVER):
-                timeoutMsg = '{"token": "buzz_time_over"}'
-                self.broadcast(timeoutMsg)
-                
-            
-            # A player buzz
-            else:
-                pass # DELETE THIS WHEN TESTING IS DONE
-            
-                # Pause buzzTimerThread
-                
-                # Broadcast to all who buzz first
-
-                # Send signal to chosen player to allow that person to answer while 
-                # sending a different signal to other players to wait
-
-                # Analyze chosen player's response and react based on the answer. 
-                
-            return 0 # DELETE THIS WHEN TESTING IS DONE
-                
-
-        # Final jeopardy (Optional)
-
-        # Broadcast winner
 
     # Listens for a new connection
     def listenForConnection(self) -> None:
@@ -238,7 +180,7 @@ class Server():
     def answerRespond(self, answer: dict):
         playerNum = answer[KEY.PLAYER_NUM]
         msgJSON = {}
-        if (answer[KEY.ANSWER].lower()).strip() == (self.currentQuestion[KEY.QUESTION].lower()).strip():
+        if (self.isCorrect(answer[KEY.ANSWER], self.currentQuestion[KEY.QUESTION])):
             self.players[playerNum].score += self.currentQuestionValue
             msgJSON = {
                 TKN.TKN:TKN.ANSWER_RESPONSE,
@@ -280,31 +222,38 @@ class Server():
         for thread in self.threads:
             thread.join()
         self.socket.close()
-
-    def startBuzzerTimer(self, timeToBuzzInSeconds: int, startTime: float, queue):
-        # Timer Settings
-        timeLimit = startTime + timeToBuzzInSeconds
         
-        # Timer Countdown Process
-        while (timeLimit - time.time()) > 0:
-            pass
+    def isCorrect(self, playerAnswer, correctAnswer) -> bool:
+        answer = playerAnswer.lower().strip()
+        rightAnswer = correctAnswer.lower().strip()
         
-        buzzingTimeOver = {"token" : "buzz_time_over"}
-        queue.put(buzzingTimeOver)
-    
-    # Keeps on listening until TKN.PLAYER_BUZZ is received
-    def listenForBuzz(self, serverSocket: socket.socket, queue):
-        buzzNotReceived = True
-        
-        while buzzNotReceived:
-            # Listen for buzz
-            response = serverSocket.recv(self.bufferLength)
-            helper.log(response)
-            msgJSON = helper.loadJSON(response)
+        # Remove 'the' or 'The'
+        if (answer[0:4] == "the "):
+            answer = answer[4:len(answer)]
+        if (rightAnswer[0:4] == "the "):
+            rightAnswer = rightAnswer[4:len(rightAnswer)]
             
-            if (msgJSON[TKN.TKN] == TKN.PLAYER_BUZZ):
-                queue.put(msgJSON)
-                buzzNotReceived = False
+        # Remove 'a' or 'A'
+        if (answer[0:2] == "a "):
+            answer = answer[2:len(answer)]
+        if (rightAnswer[0:2] == "a "):
+            rightAnswer = rightAnswer[2:len(rightAnswer)]
+            
+        # Relaxing the answer
+        if (rightAnswer[len(rightAnswer)-1] == 's') or (rightAnswer[len(rightAnswer)-1] == 'y'):
+            correctAnswerWithoutPlural = rightAnswer[0:len(rightAnswer)-1] 
+        else:
+            correctAnswerWithoutPlural = rightAnswer
+            
+        if (rightAnswer[len(rightAnswer)-3: len(rightAnswer)] == "ing"):
+            correctAnswerWithoutING = rightAnswer[0:len(rightAnswer)-3]
+        else:
+            correctAnswerWithoutING = rightAnswer
+            
+        # Checking the answer
+        if (answer == rightAnswer) or (answer == correctAnswerWithoutPlural) or (answer == correctAnswerWithoutING):
+            return True
+        return False
         
 if __name__ == "__main__":
     server = Server()

@@ -59,5 +59,11 @@
         "send_type": "broadcast",
         "player_num": 0,
         "current_player_turn" : 0
+    },
+    {
+        "token": "player_buzz",
+        "send_type": "broadcast",
+        "player_num": 0,
+        "player_who_buzz" : 0
     }
 ]
