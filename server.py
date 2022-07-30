@@ -239,6 +239,18 @@ class Server():
         if (rightAnswer[0:2] == "a "):
             rightAnswer = rightAnswer[2:len(rightAnswer)]
             
+        # Remove 's'
+        if (answer[len(answer) - 1] == 's'):
+            answerWithoutPlural = answer[0:len(answer)-1]
+        else:
+            answerWithoutPlural = answer
+        
+        # Remove 'ing'
+        if (answer[len(answer)-3 : len(answer)] == "ing"):
+            answerWithoutING = answer[0:len(answer)-3]
+        else:
+            answerWithoutING = answer
+            
         # Relaxing the answer
         if (rightAnswer[len(rightAnswer)-1] == 's') or (rightAnswer[len(rightAnswer)-1] == 'y'):
             correctAnswerWithoutPlural = rightAnswer[0:len(rightAnswer)-1] 
@@ -251,7 +263,11 @@ class Server():
             correctAnswerWithoutING = rightAnswer
             
         # Checking the answer
-        if (answer == rightAnswer) or (answer == correctAnswerWithoutPlural) or (answer == correctAnswerWithoutING):
+        if (answer == rightAnswer):
+            return True
+        elif (answer == correctAnswerWithoutPlural) or (answerWithoutPlural == rightAnswer):
+            return True
+        elif (answer == correctAnswerWithoutING) or (answerWithoutING == rightAnswer):
             return True
         return False
         
