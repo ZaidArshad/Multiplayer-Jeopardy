@@ -35,6 +35,7 @@ class Server():
         self.currentQuestion = {}
         self.currentQuestionValue = 0
         self.buzzedInPlayerNum = VAL.NON_PLAYER
+        self.finalJepQuestion = ""
 
     # Binds the server to the given address and start threading
     def start(self, address: tuple[str, int]) -> None:
@@ -48,7 +49,7 @@ class Server():
         finalJepID = random.randint(1,74)
         for x in data:
             if x["category_number"]==finalJepID:
-                finalJepQuestion = x
+                self.finalJepQuestion = x
                 break
         file.close()
 
@@ -134,6 +135,18 @@ class Server():
                 self.broadcast(json.dumps(questionJSON))
                 self.currentQuestion = questionJSON
                 self.currentQuestionValue = (msgJSON[KEY.ROW]+1)*200
+                self.resetGuessBool()
+            
+            #Sends the final jeopardy question to all clients
+            if token == TKN.FINAL_JEOPARDY:
+                questionJSON = {
+                    TKN.TKN:TKN.FINAL_JEOPARDY,
+                    KEY.QUESTION:self.finalJepQuestion["question"],
+                    KEY.ANSWER:self.finalJepQuestion["answer"]
+                }
+                self.broadcast(json.dumps(questionJSON))
+                self.currentQuestion = questionJSON
+                self.currentQuestionValue = 1
                 self.resetGuessBool()
 
             if token == TKN.PLAYER_ANSWER:
@@ -228,10 +241,7 @@ class Server():
             self.broadcast(json.dumps(msgJSON))
             self.players[playerNum].hasGuessed = True
             if not self.anyPlayersLeft():
-                print("NO PLAYERS LEFT")
-                #time.sleep(6)
                 threading.Thread(target=self.noPlayersLeft, args=(answer, )).start()
-                #self.noGuess(answer)
 
     def sendPlayerInfo(self):
         msgJSON = {
@@ -319,7 +329,7 @@ class Server():
         else:
             correctAnswerWithoutING = rightAnswer
         
-        delimiterSettings = ";", "," , "-", "_", ";"
+        delimiterSettings = ";", "," , "-", "_", ";",'"'
         delimiter = '|'.join(map(re.escape, delimiterSettings))
         tmpAnswer = re.split(delimiter, rightAnswer)
         correctAnswerWithoutPunctuation = self.listToString(tmpAnswer, False)

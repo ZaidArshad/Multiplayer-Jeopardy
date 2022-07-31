@@ -372,6 +372,7 @@ class Client():
         self.connected = False
         self.categories = []
         self.turn = 0
+        self.answeredQuestions = 0
 
     # Connects to the server, prints confirmation
     def connect(self, address: tuple[str, int], playerName: str) -> None:
@@ -448,6 +449,10 @@ class Client():
                 #Start the timer to allow time for the players to read the question
                 self.gui.mainScreen.questionPrompt.buzzTimerThread.timeLength = 5
                 self.gui.mainScreen.questionPrompt.buzzTimerThread.start()
+            
+            elif token == TKN.FINAL_JEOPARDY:
+                self.finalJepPrompt("Final Jeopardy", responseJSON[KEY.ANSWER])
+                self.gui.mainScreen.promptThread.start()
 
             elif token == TKN.ANSWER_RESPONSE:
                 handleThread = threading.Thread(target=self.handleAnswerResponse, args=(responseJSON, ))
@@ -475,6 +480,14 @@ class Client():
         self.gui.mainScreen.questionPrompt.categoryLabel.setText(category)
         self.gui.mainScreen.questionPrompt.questionLabel.setText(question)
         self.gui.mainScreen.questionPrompt.answerLineEdit.hide()
+    
+    def finalJepPrompt(self, category: str, question: str) -> None:
+        self.gui.mainScreen.questionPrompt.timerLabel.hide()
+        self.gui.mainScreen.questionPrompt.categoryLabel.setText(category)
+        self.gui.mainScreen.questionPrompt.questionLabel.setText("Indicate how much you want to wager!")
+        self.gui.mainScreen.questionPrompt.readyToAnswer = True
+        self.gui.mainScreen.questionPrompt.hasGuessed = False
+        self.gui.mainScreen.questionPrompt.answerLineEdit.show()
 
     def handleBuzz(self, responseJSON: dict):
         self.gui.animationThread.isBuzzed =  responseJSON[KEY.STATUS]
@@ -489,6 +502,12 @@ class Client():
             self.gui.mainScreen.questionPrompt.answerLineEditThread.start()
         else:
             self.gui.mainScreen.questionPrompt.readyToAnswer = False
+    
+    def finalJeopardy(self):
+        msgJSON = {
+            TKN.TKN:TKN.FINAL_JEOPARDY,
+        }
+        self.client.send(msgJSON, False)
 
     def handleAnswerResponse(self, responseJSON: dict) -> None:
         self.gui.mainScreen.questionPrompt.answerTimerThread.terminate()
@@ -497,8 +516,8 @@ class Client():
                 self.gui.mainScreen.board.buttons[responseJSON[KEY.COL]][responseJSON[KEY.ROW]].hide()
                 self.turn = responseJSON[KEY.CURRENT_PLAYER_TURN]
                 if responseJSON[KEY.PLAYER_NUM] == VAL.NON_PLAYER:
-                    print("About to terminate guessing")
                     self.gui.mainScreen.questionPrompt.guessTimerThread.terminate()
+                self.answeredQuestions += 1
         else:
             self.gui.interfaceUpdateThread.setAnswerLineEditColor("#FF0000")
             self.gui.mainScreen.questionPrompt.guessTimerThread.start()
@@ -512,6 +531,8 @@ class Client():
             self.gui.mainScreen.questionPrompt.readyToAnswer = True
         self.gui.interfaceUpdateThread.clearAnswerLineEdit()
         #self.gui.mainScreen.questionPrompt.placeholderText.setText("You have already guessed!")
+        if self.answeredQuestions == 30:
+            self.finalJeopardy()
 
     def trimCategory(self, category: str, maxLength: int) -> str:
         if len(category) <= maxLength:
