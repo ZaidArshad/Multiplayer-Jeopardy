@@ -108,5 +108,5 @@ class Ui_Form(object):
         Form.setWindowTitle(_translate("Form", "Form"))
         self.categoryLabel.setText(_translate("Form", "NEWS TO ME"))
         self.questionLabel.setText(_translate("Form", "A 7.0 magnitude earthquake in this Caribbean country Jan. 12, 2010 brought a world outpouring of aid"))
-        self.timerLabel.setText(_translate("Form", "0:30"))
+        self.timerLabel.setText(_translate("Form", "5"))
         self.answerLineEdit.setPlaceholderText(_translate("Form", "What is: "))

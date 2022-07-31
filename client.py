@@ -46,9 +46,13 @@ class GUI():
         self.animationThread.unBuzzSignal.connect(self.unBuzzPlayer)
 
         self.interfaceUpdateThread = InterfaceUpdateThread()
-        self.interfaceUpdateThread.answerLineEditSignal.connect(
+        self.interfaceUpdateThread.answerLineEditTextSignal.connect(
             self.mainScreen.questionPrompt.answerLineEdit.setText)
-        self.interfaceUpdateThread.playerCardSignal.connect(self.updatePlayers)
+        self.interfaceUpdateThread.playerCardSignal.connect(self.updatePlayers) 
+        self.interfaceUpdateThread.answerLineEditColorSignal.connect(
+            self.mainScreen.questionPrompt.setLineEditColor)
+        self.interfaceUpdateThread.answerLineEditClearSignal.connect(
+            self.mainScreen.questionPrompt.resetLineEdit)
 
     def buzzPlayer(self, playerNum: int) -> None:
         self.mainScreen.playerCards[playerNum].buzzedIn()
@@ -487,11 +491,11 @@ class Client():
     def handleAnswerResponse(self, responseJSON: dict) -> None:
         self.gui.mainScreen.questionPrompt.answerTimerThread.terminate()
         if responseJSON[KEY.STATUS]:
-                self.gui.mainScreen.questionPrompt.setLineEditColor("#00FF00")
+                self.gui.interfaceUpdateThread.setAnswerLineEditColor("#00FF00")
                 self.gui.mainScreen.board.buttons[responseJSON[KEY.COL]][responseJSON[KEY.ROW]].hide()
                 self.turn = responseJSON[KEY.CURRENT_PLAYER_TURN]
         else:
-            self.gui.mainScreen.questionPrompt.setLineEditColor("#FF0000")
+            self.gui.interfaceUpdateThread.setAnswerLineEditColor("#FF0000")
             self.gui.mainScreen.questionPrompt.guessTimerThread.start()
 
         time.sleep(2)
@@ -501,7 +505,7 @@ class Client():
             self.gui.mainScreen.promptThread.start()
         else:
             self.gui.mainScreen.questionPrompt.readyToAnswer = True
-        self.gui.mainScreen.questionPrompt.resetLineEdit()
+        self.gui.interfaceUpdateThread.clearAnswerLineEdit()
         #self.gui.mainScreen.questionPrompt.placeholderText.setText("You have already guessed!")
 
     def trimCategory(self, category: str, maxLength: int) -> str:
@@ -591,22 +595,35 @@ class TimerThread(QThread):
         self.finishedSignal.emit()
 
 class InterfaceUpdateThread(QThread):
-    update = [False]*2
+    INTERFACE_OBJECTS = 4
+    update = [False]*INTERFACE_OBJECTS
 
-    answerLineEditSignal = pyqtSignal(str)
+    answerLineEditTextSignal = pyqtSignal(str)
     answerLineEditText = ""
 
     playerCardSignal = pyqtSignal(object)
     playerCardData = {}
 
+    answerLineEditColorSignal = pyqtSignal(str)
+    answerLineEditColor = "#FFFFFF"
+
+    answerLineEditClearSignal = pyqtSignal()
+
+
     def run(self):
         if self.update[0]:
-            self.answerLineEditSignal.emit(self.answerLineEditText)
+            self.answerLineEditTextSignal.emit(self.answerLineEditText)
 
         if self.update[1]:   
             self.playerCardSignal.emit(self.playerCardData)
 
-        self.update = [False]*2
+        if self.update[2]:
+            self.answerLineEditColorSignal.emit(self.answerLineEditColor)
+
+        if self.update[3]:
+            self.answerLineEditClearSignal.emit()
+
+        self.update = [False]*self.INTERFACE_OBJECTS
 
     def setAnswerLineEditText(self, text: str):
         self.update[0] = True
@@ -618,12 +635,14 @@ class InterfaceUpdateThread(QThread):
         self.playerCardData = data
         self.start()
 
-    
+    def setAnswerLineEditColor(self, color: str):
+        self.update[2] = True
+        self.answerLineEditColor = color
+        self.start()
 
-
-
-
-
+    def clearAnswerLineEdit(self):
+        self.update[3] = True
+        self.start()
 
 if __name__ == "__main__":
     gui = GUI()
