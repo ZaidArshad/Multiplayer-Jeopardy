@@ -237,6 +237,10 @@ class Server():
     def isCorrect(self, playerAnswer, correctAnswer) -> bool:
         answer = playerAnswer.lower().strip()
         rightAnswer = correctAnswer.lower().strip()
+
+        #If user did not input an answer
+        if not answer:
+            return False
         
         # Remove 'the' or 'The'
         if (answer[0:4] == "the "):
