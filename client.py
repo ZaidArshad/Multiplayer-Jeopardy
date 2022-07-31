@@ -73,11 +73,10 @@ class GUI():
         self.client.send({TKN.TKN:token})
 
     def chooseQuestion(self, row: int, col: int) -> None:
-        # uncomment this when player turn announcement from server works
         # if its not your turn, do not allow question selection
-        # if not self.client.turn:
-        #     return
-        #########################
+        if self.client.turn != self.client.playerNum:
+             return
+        
         questionSelectionJSON = {
             TKN.TKN:TKN.PLAYER_QUESTION_SELECT,
             KEY.ROW:row,
@@ -236,7 +235,11 @@ class QuestionPrompt(QWidget):
     
     def terminateGuessing(self) -> None:
         if self.mainScreen.gui.client.playerNum == 0:
-            self.mainScreen.gui.submitToken(TKN.GUESS_TIMEOUT)
+            msgJSON = {
+                TKN.TKN:TKN.GUESS_TIMEOUT,
+                KEY.CURRENT_PLAYER_TURN:self.mainScreen.gui.client.turn
+            }
+            self.mainScreen.gui.client.send(msgJSON)
 
     def enableGuessing(self):
         self.guessTimerThread.timeLength = 15
@@ -362,7 +365,7 @@ class Client():
         self.bufferLength = BUFFER
         self.connected = False
         self.categories = []
-        self.turn = False
+        self.turn = 0
 
     # Connects to the server, prints confirmation
     def connect(self, address: tuple[str, int], playerName: str) -> None:
@@ -386,6 +389,10 @@ class Client():
 
                 responseJson = self.receive()
                 self.gui.updatePlayers(responseJson)
+
+                #Gives the first player to join the choice to choose a question
+                #if self.playerNum == 0:
+                #    self.turn = True
 
                 # Starts the thread for listening to the server
                 self.connected = True
@@ -448,11 +455,14 @@ class Client():
                 self.gui.mainScreen.questionPrompt.answerLineEditThread.start()
                 self.gui.interfaceUpdateThread.setAnswerLineEditText(responseJSON[KEY.ANSWER])
 
-            elif token == TKN.PLAYER_TURN:
-                if self.playerNum == responseJSON[KEY.CURRENT_PLAYER_TURN]:
-                    self.turn = True
-                else:
-                    self.turn = False
+            #elif token == TKN.PLAYER_TURN:
+            #    if self.playerNum == responseJSON[KEY.CURRENT_PLAYER_TURN]:
+            #        self.turn = True
+            #    else:
+            #        self.turn = False
+
+            #TEMPORARY FIX FOR CRASHING OF RECEIVING PLAYER_TURN AND ANSWER_RESPONSE TOO QUICKLY
+            #time.sleep(2)
 
     def initializePrompt(self, category: str, question: str) -> None:
         self.gui.mainScreen.questionPrompt.timerLabel.show()
@@ -479,6 +489,7 @@ class Client():
         if responseJSON[KEY.STATUS]:
                 self.gui.mainScreen.questionPrompt.setLineEditColor("#00FF00")
                 self.gui.mainScreen.board.buttons[responseJSON[KEY.COL]][responseJSON[KEY.ROW]].hide()
+                self.turn = responseJSON[KEY.CURRENT_PLAYER_TURN]
         else:
             self.gui.mainScreen.questionPrompt.setLineEditColor("#FF0000")
             self.gui.mainScreen.questionPrompt.guessTimerThread.start()

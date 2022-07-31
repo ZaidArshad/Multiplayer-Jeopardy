@@ -33,5 +33,10 @@
         "player_name": "Temp Name",
         "row": 0,
         "col": 0
+    },
+    {
+        "token": "guess_timeout",
+        "send_type": "client",
+        "current_player_turn": 0
     }
 ]
