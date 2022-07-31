@@ -238,12 +238,13 @@ class QuestionPrompt(QWidget):
         self.timerLabel.setText(str(time))
     
     def terminateGuessing(self) -> None:
-        if self.mainScreen.gui.client.playerNum == 0:
+        if self.mainScreen.gui.client.playerNum == 0 and self.readyToAnswer:
             msgJSON = {
                 TKN.TKN:TKN.GUESS_TIMEOUT,
                 KEY.CURRENT_PLAYER_TURN:self.mainScreen.gui.client.turn
             }
             self.mainScreen.gui.client.send(msgJSON)
+        self.readyToAnswer = False
 
     def enableGuessing(self):
         self.guessTimerThread.timeLength = 15
@@ -272,7 +273,7 @@ class QuestionPrompt(QWidget):
         self.answerLineEdit.setEnabled(status)
 
     def answer(self):
-        if self.isBuzzed:
+        if self.isBuzzed and self.readyToAnswer:
             self.buzzed(False)
             time.sleep(2)
             self.readyToAnswer = False
