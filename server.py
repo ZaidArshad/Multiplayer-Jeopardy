@@ -261,6 +261,9 @@ class Server():
             correctAnswerWithoutING = rightAnswer[0:len(rightAnswer)-3]
         else:
             correctAnswerWithoutING = rightAnswer
+        
+        wordsInRightAnswer = rightAnswer.split()
+        isPlayerAnswerRight = False
             
         # Checking the answer
         if (answer == rightAnswer):
@@ -268,6 +271,11 @@ class Server():
         elif (answer == correctAnswerWithoutPlural) or (answerWithoutPlural == rightAnswer):
             return True
         elif (answer == correctAnswerWithoutING) or (answerWithoutING == rightAnswer):
+            return True
+        for x in range(len(wordsInRightAnswer)):
+            if (answer == wordsInRightAnswer[x]):
+                isPlayerAnswerRight = True
+        if (isPlayerAnswerRight):
             return True
         return False
         
