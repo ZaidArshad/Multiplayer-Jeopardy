@@ -69,7 +69,8 @@ class GUI():
         answer = self.mainScreen.questionPrompt.answerLineEdit.text()
         answerJSON = {
             TKN.TKN:TKN.PLAYER_ANSWER,
-            KEY.ANSWER:answer
+            KEY.ANSWER:answer,
+            KEY.CURRENT_PLAYER_TURN:self.mainScreen.gui.client.turn
         }
         self.client.send(answerJSON, True)
 
@@ -495,6 +496,9 @@ class Client():
                 self.gui.interfaceUpdateThread.setAnswerLineEditColor("#00FF00")
                 self.gui.mainScreen.board.buttons[responseJSON[KEY.COL]][responseJSON[KEY.ROW]].hide()
                 self.turn = responseJSON[KEY.CURRENT_PLAYER_TURN]
+                if responseJSON[KEY.PLAYER_NUM] == VAL.NON_PLAYER:
+                    print("About to terminate guessing")
+                    self.gui.mainScreen.questionPrompt.guessTimerThread.terminate()
         else:
             self.gui.interfaceUpdateThread.setAnswerLineEditColor("#FF0000")
             self.gui.mainScreen.questionPrompt.guessTimerThread.start()

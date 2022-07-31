@@ -19,6 +19,8 @@ import keys as KEY
 #To generate a random game
 import random
 
+import time
+
 print("TCP Server")
 BUFFER = 1024
 
@@ -132,6 +134,7 @@ class Server():
                 self.broadcast(json.dumps(questionJSON))
                 self.currentQuestion = questionJSON
                 self.currentQuestionValue = (msgJSON[KEY.ROW]+1)*200
+                self.resetGuessBool()
 
             if token == TKN.PLAYER_ANSWER:
                 self.answerRespond(msgJSON)
@@ -180,12 +183,23 @@ class Server():
             }
         self.broadcast(json.dumps(msgJSON))
     
+    def noPlayersLeft(self, msg: dict):
+        time.sleep(4)
+        self.noGuess(msg)
+
     #def changeTurn(self, player_num:int):
     #    msgJSON = {
     #            TKN.TKN:TKN.PLAYER_TURN,
     #            KEY.CURRENT_PLAYER_TURN:player_num,
     #        }
     #    self.broadcast(json.dumps(msgJSON))
+
+    def anyPlayersLeft(self):
+        playersLeft = False
+        for player in self.players:
+            if player.hasGuessed == False:
+                playersLeft = True
+        return playersLeft
 
     def answerRespond(self, answer: dict):
         playerNum = answer[KEY.PLAYER_NUM]
@@ -201,6 +215,7 @@ class Server():
                 KEY.COL:self.currentQuestion[KEY.COL],
                 KEY.CURRENT_PLAYER_TURN:playerNum
             }
+            self.broadcast(json.dumps(msgJSON))
             #self.changeTurn(playerNum)
         else:
             self.players[playerNum].score -= self.currentQuestionValue
@@ -210,7 +225,13 @@ class Server():
                 KEY.STATUS:False,
                 KEY.PLAYER_NUM:playerNum
             }
-        self.broadcast(json.dumps(msgJSON))
+            self.broadcast(json.dumps(msgJSON))
+            self.players[playerNum].hasGuessed = True
+            if not self.anyPlayersLeft():
+                print("NO PLAYERS LEFT")
+                #time.sleep(6)
+                threading.Thread(target=self.noPlayersLeft, args=(answer, )).start()
+                #self.noGuess(answer)
 
     def sendPlayerInfo(self):
         msgJSON = {
@@ -342,6 +363,10 @@ class Server():
                 if (not noSpaces):
                     newString += " "
             return newString
+    
+    def resetGuessBool(self):
+        for player in self.players:
+            player.hasGuessed = False
         
 if __name__ == "__main__":
     server = Server()

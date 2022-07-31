@@ -8,6 +8,7 @@ class Player():
         self.name = name
         self.score = 0
         self.socket = socket
+        self.hasGuessed = False
 
     def getJSON(self) -> dict:
         return {
