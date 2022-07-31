@@ -5,6 +5,7 @@ from logging import raiseExceptions
 from optparse import Values
 import socket
 from turtle import right
+import re
 
 #from numpy import broadcast
 import helper
@@ -235,38 +236,58 @@ class Server():
         self.socket.close()
         
     def isCorrect(self, playerAnswer, correctAnswer) -> bool:
-        answer = playerAnswer.lower().strip()
+        playAnswer = playerAnswer.lower().strip()
         rightAnswer = correctAnswer.lower().strip()
 
         #If user did not input an answer
-        if not answer:
+        if not playAnswer:
             return False
         
         # Remove 'the' or 'The'
-        if (answer[0:4] == "the "):
-            answer = answer[4:len(answer)]
+        if (playAnswer[0:4] == "the "):
+            playAnswer = playAnswer[4:len(playAnswer)]
         if (rightAnswer[0:4] == "the "):
             rightAnswer = rightAnswer[4:len(rightAnswer)]
             
         # Remove 'a' or 'A'
-        if (answer[0:2] == "a "):
-            answer = answer[2:len(answer)]
+        if (playAnswer[0:2] == "a "):
+            playAnswer = playAnswer[2:len(playAnswer)]
         if (rightAnswer[0:2] == "a "):
             rightAnswer = rightAnswer[2:len(rightAnswer)]
             
         # Remove 's'
-        if (answer[len(answer) - 1] == 's'):
-            answerWithoutPlural = answer[0:len(answer)-1]
+        if (playAnswer[len(playAnswer) - 1] == 's'):
+            answerWithoutPlural = playAnswer[0:len(playAnswer)-1]
         else:
-            answerWithoutPlural = answer
+            answerWithoutPlural = playAnswer
         
         # Remove 'ing'
-        if (answer[len(answer)-3 : len(answer)] == "ing"):
-            answerWithoutING = answer[0:len(answer)-3]
+        if (playAnswer[len(playAnswer)-3 : len(playAnswer)] == "ing"):
+            answerWithoutING = playAnswer[0:len(playAnswer)-3]
         else:
-            answerWithoutING = answer
+            answerWithoutING = playAnswer
             
-        # Relaxing the answer
+        # Remove "to"
+        if (playAnswer[0:3] == "to "):
+            playAnswer = playAnswer[3:len(playAnswer)]
+        if (rightAnswer[0:3] == "to "):
+            rightAnswer = rightAnswer[3:len(rightAnswer)]
+            
+        # Removing player's punctuation
+        delimiterSettings = ";", "," , "-", "_", ";"
+        delimiter = '|'.join(map(re.escape, delimiterSettings))
+        tmpAnswer = re.split(delimiter, playAnswer)
+        playerAnswerWithoutPunctuation = self.listToString(tmpAnswer, False)
+        
+        tmpAnswer = playAnswer.split(",")
+        playerAnswerWithoutComma = self.listToString(tmpAnswer, True)
+        
+        delimiterSettings = "'s", "s'"
+        delimiter = '|'.join(map(re.escape, delimiterSettings))
+        tmpAnswer = re.split(delimiter, playAnswer)
+        playerAnswerWithoutApostropheS = self.listToString(tmpAnswer, True)
+        
+        # Relaxing the correct answer
         if (rightAnswer[len(rightAnswer)-1] == 's') or (rightAnswer[len(rightAnswer)-1] == 'y'):
             correctAnswerWithoutPlural = rightAnswer[0:len(rightAnswer)-1] 
         else:
@@ -277,22 +298,50 @@ class Server():
         else:
             correctAnswerWithoutING = rightAnswer
         
+        delimiterSettings = ";", "," , "-", "_", ";"
+        delimiter = '|'.join(map(re.escape, delimiterSettings))
+        tmpAnswer = re.split(delimiter, rightAnswer)
+        correctAnswerWithoutPunctuation = self.listToString(tmpAnswer, False)
+        
+        tmpAnswer = rightAnswer.split(",")
+        correctAnswerWithoutComma = self.listToString(tmpAnswer, True)
+        
+        delimiterSettings = "'s", "s'"
+        delimiter = '|'.join(map(re.escape, delimiterSettings))
+        tmpAnswer = re.split(delimiter, rightAnswer)
+        correctAnswerWithoutApostropheS = self.listToString(tmpAnswer, True)
+        
         wordsInRightAnswer = rightAnswer.split()
         isPlayerAnswerRight = False
             
         # Checking the answer
-        if (answer == rightAnswer):
+        if (playAnswer == rightAnswer):
             return True
-        elif (answer == correctAnswerWithoutPlural) or (answerWithoutPlural == rightAnswer):
+        elif (playAnswer == correctAnswerWithoutPlural) or (answerWithoutPlural == rightAnswer):
             return True
-        elif (answer == correctAnswerWithoutING) or (answerWithoutING == rightAnswer):
+        elif (playAnswer == correctAnswerWithoutING) or (answerWithoutING == rightAnswer):
+            return True
+        elif (playAnswer == correctAnswerWithoutPunctuation) or (playerAnswerWithoutPunctuation == rightAnswer):
+            return True
+        elif (playAnswer == correctAnswerWithoutComma) or (playerAnswerWithoutComma == rightAnswer):
+            return True
+        elif (playAnswer == correctAnswerWithoutApostropheS) or (playerAnswerWithoutApostropheS == rightAnswer):
             return True
         for x in range(len(wordsInRightAnswer)):
-            if (answer == wordsInRightAnswer[x]):
+            if (playAnswer == wordsInRightAnswer[x]):
                 isPlayerAnswerRight = True
         if (isPlayerAnswerRight):
             return True
         return False
+    
+    # Returns string with spaces in between each word
+    def listToString(self, list, noSpaces: bool) -> str:
+            newString = ""
+            for x in range(len(list)):
+                newString += list[x]
+                if (not noSpaces):
+                    newString += " "
+            return newString
         
 if __name__ == "__main__":
     server = Server()
