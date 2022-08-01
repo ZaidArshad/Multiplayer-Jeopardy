@@ -53,6 +53,8 @@ class GUI():
             self.mainScreen.questionPrompt.setLineEditColor)
         self.interfaceUpdateThread.answerLineEditClearSignal.connect(
             self.mainScreen.questionPrompt.resetLineEdit)
+        self.interfaceUpdateThread.playerCardChoosingSignal.connect(
+            self.mainScreen.lockInPlayer)
 
     def buzzPlayer(self, playerNum: int) -> None:
         self.mainScreen.playerCards[playerNum].buzzedIn()
@@ -80,7 +82,7 @@ class GUI():
     def chooseQuestion(self, row: int, col: int) -> None:
         # if its not your turn, do not allow question selection
         if self.client.turn != self.client.playerNum:
-             return
+            return
         
         questionSelectionJSON = {
             TKN.TKN:TKN.PLAYER_QUESTION_SELECT,
@@ -173,8 +175,8 @@ class MainScreen(QDialog):
         loadUi("ui/main_screen.ui", self)
         
         self.widgetIndex = 0
-        self.questionPrompt = QuestionPrompt(self)
         self.board = Board(self)
+        self.questionPrompt = QuestionPrompt(self)
         self.stackedWidget = QStackedWidget()
         self.stackedWidgetHolder.addWidget(self.stackedWidget)
         self.stackedWidget.addWidget(self.board)
@@ -190,13 +192,26 @@ class MainScreen(QDialog):
             PlayerCard(self,  251, 520, "#F36CFF"),
             PlayerCard(self,  480, 520, "#6FD966")
         ]
+        self.playerCards[1].greyOut()
+        self.playerCards[2].greyOut()
+
+    def lockInPlayer(self, playerNum: int) -> None:
+        self.playerCards[playerNum].colorIn()
+        for i in range(len(self.playerCards)):
+            if i != playerNum:
+                self.playerCards[i].greyOut()
+    
+    def colorPlayers(self) -> None:
+        for player in self.playerCards:
+            player.colorIn()
 
     # Switches between the game board and question prompt
     def togglePrompt(self) -> None:
-        if self.widgetIndex:
-            self.widgetIndex = 0
+        if self.widgetIndex == VAL.WIDGET_PROMPT:
+            self.widgetIndex = VAL.WIDGET_BOARD
         else:
-            self.widgetIndex = 1
+            self.widgetIndex = VAL.WIDGET_PROMPT
+            self.colorPlayers()
         self.stackedWidget.setCurrentIndex(self.widgetIndex)
 
     def keyPressEvent(self, event) -> None:
@@ -338,9 +353,11 @@ class PlayerCard():
         self.widget.nameLabel.clear()
         self.widget.scoreLabel.clear()
 
-    # Not implemented fully
-    def lockout(self) -> None:
+    def greyOut(self) -> None:
         self.setColor("#7D7D7D")
+
+    def colorIn(self) -> None:
+        self.setColor(self.color)
 
     # Buzz in animation
     def buzzedIn(self) -> None:
@@ -515,6 +532,7 @@ class Client():
                 self.gui.interfaceUpdateThread.setAnswerLineEditColor("#00FF00")
                 self.gui.mainScreen.board.buttons[responseJSON[KEY.COL]][responseJSON[KEY.ROW]].hide()
                 self.turn = responseJSON[KEY.CURRENT_PLAYER_TURN]
+                self.gui.interfaceUpdateThread.setPlayerCardChoosingNum(responseJSON[KEY.CURRENT_PLAYER_TURN])
                 if responseJSON[KEY.PLAYER_NUM] == VAL.NON_PLAYER:
                     self.gui.mainScreen.questionPrompt.guessTimerThread.terminate()
                 self.answeredQuestions += 1
@@ -605,7 +623,6 @@ class AnswerLineEditThread(QThread):
         self.enabledSignal.emit(self.status)
         self.enabledSignal.emit(self.status)
 
-
 class TimerThread(QThread):
     timeLength = 0
     displaySignal = pyqtSignal(int)
@@ -621,7 +638,7 @@ class TimerThread(QThread):
         self.finishedSignal.emit()
 
 class InterfaceUpdateThread(QThread):
-    INTERFACE_OBJECTS = 4
+    INTERFACE_OBJECTS = 5
     update = [False]*INTERFACE_OBJECTS
 
     answerLineEditTextSignal = pyqtSignal(str)
@@ -635,6 +652,8 @@ class InterfaceUpdateThread(QThread):
 
     answerLineEditClearSignal = pyqtSignal()
 
+    playerCardChoosingSignal = pyqtSignal(int)
+    playerCardChoosingNum = VAL.NON_PLAYER
 
     def run(self):
         if self.update[0]:
@@ -648,6 +667,9 @@ class InterfaceUpdateThread(QThread):
 
         if self.update[3]:
             self.answerLineEditClearSignal.emit()
+
+        if self.update[4]:
+            self.playerCardChoosingSignal.emit(self.playerCardChoosingNum)
 
         self.update = [False]*self.INTERFACE_OBJECTS
 
@@ -668,6 +690,11 @@ class InterfaceUpdateThread(QThread):
 
     def clearAnswerLineEdit(self):
         self.update[3] = True
+        self.start()
+
+    def setPlayerCardChoosingNum(self, num: int):
+        self.update[4] = True
+        self.playerCardChoosingNum = num
         self.start()
 
 if __name__ == "__main__":
