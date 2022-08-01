@@ -332,6 +332,8 @@ class PlayerCard():
         self.parent = parent
         self.color = color
         self.widget.move(x, y)
+        self.xPos = x
+        self.yPos = y
         self.widget.resize(200, 300)
         layout = QVBoxLayout(self.widget)
         self.setColor(color)
@@ -369,7 +371,7 @@ class PlayerCard():
     # Buzz out animation
     def buzzedOut(self) -> None:
         self.widget.anim = QPropertyAnimation(self.widget, "pos".encode())
-        self.widget.anim.setEndValue(QPoint(self.widget.x(), self.widget.y()+35))
+        self.widget.anim.setEndValue(QPoint(self.xPos, self.yPos))
         self.widget.anim.setDuration(200)
         self.widget.anim.start()
 
@@ -474,14 +476,14 @@ class Client():
             elif token == TKN.ANSWER_RESPONSE:
                 handleThread = threading.Thread(target=self.handleAnswerResponse, args=(responseJSON, ))
                 handleThread.start()
+                self.gui.interfaceUpdateThread.setAnswerLineEditText(responseJSON[KEY.ANSWER])
                 self.gui.mainScreen.questionPrompt.answerLineEditThread.status = False
                 self.gui.mainScreen.questionPrompt.answerLineEditThread.start()
-                self.gui.interfaceUpdateThread.setAnswerLineEditText(responseJSON[KEY.ANSWER])
 
             elif token == TKN.PLAYER_ANSWER:
+                self.gui.interfaceUpdateThread.setAnswerLineEditText(responseJSON[KEY.ANSWER])
                 self.gui.mainScreen.questionPrompt.answerLineEditThread.status = False
                 self.gui.mainScreen.questionPrompt.answerLineEditThread.start()
-                self.gui.interfaceUpdateThread.setAnswerLineEditText(responseJSON[KEY.ANSWER])
 
             #elif token == TKN.PLAYER_TURN:
             #    if self.playerNum == responseJSON[KEY.CURRENT_PLAYER_TURN]:
