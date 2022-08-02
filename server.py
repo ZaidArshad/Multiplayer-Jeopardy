@@ -213,9 +213,19 @@ class Server():
             if player.hasGuessed == False:
                 playersLeft = True
         return playersLeft
+    
+    def setWagerAmount(self, answer: dict):
+        for player in self.players:
+            if player.num == answer[KEY.PLAYER_NUM]:
+                player.wagerAmount = answer[KEY.ANSWER]
+                #print("SET THE WAGER AMOUNT")
 
     def answerRespond(self, answer: dict):
         playerNum = answer[KEY.PLAYER_NUM]
+        if answer[KEY.WAGER_VALUE]:
+            #print(answer[KEY.WAGER_VALUE])
+            self.setWagerAmount(answer)
+            return
         msgJSON = {}
         if (self.isCorrect(answer[KEY.ANSWER], self.currentQuestion[KEY.QUESTION])):
             self.players[playerNum].score += self.currentQuestionValue

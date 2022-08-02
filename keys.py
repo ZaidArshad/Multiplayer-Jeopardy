@@ -41,3 +41,6 @@ QUESTION = "question"
 
 # The player number to choose the next value/category : int
 CURRENT_PLAYER_TURN = "current_player_turn"
+
+# Wager for final jeopardy
+WAGER_VALUE = "wager_value"

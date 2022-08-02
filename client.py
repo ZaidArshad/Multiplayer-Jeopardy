@@ -72,8 +72,13 @@ class GUI():
         answerJSON = {
             TKN.TKN:TKN.PLAYER_ANSWER,
             KEY.ANSWER:answer,
-            KEY.CURRENT_PLAYER_TURN:self.mainScreen.gui.client.turn
+            KEY.CURRENT_PLAYER_TURN:self.mainScreen.gui.client.turn,
+            KEY.WAGER_VALUE:False
         }
+        if self.client.answeredQuestions == 31: #If the user inputted their wager
+            y = {KEY.WAGER_VALUE:True}
+            answerJSON.update(y)
+            self.client.answeredQuestions += 1
         self.client.send(answerJSON, True)
 
     def submitToken(self, token: str) -> None:
@@ -469,9 +474,10 @@ class Client():
                 self.gui.mainScreen.questionPrompt.buzzTimerThread.timeLength = 5
                 self.gui.mainScreen.questionPrompt.buzzTimerThread.start()
             
-            elif token == TKN.FINAL_JEOPARDY:
-                self.finalJepPrompt("Final Jeopardy", responseJSON[KEY.ANSWER])
-                self.gui.mainScreen.promptThread.start()
+            # USE TO RECEIVE THE ACTUAL FINAL JEOPARDY QUESTION
+            #elif token == TKN.FINAL_JEOPARDY:
+            #    self.finalJepPrompt("Final Jeopardy", responseJSON[KEY.ANSWER])
+            #    self.gui.mainScreen.promptThread.start()
 
             elif token == TKN.ANSWER_RESPONSE:
                 handleThread = threading.Thread(target=self.handleAnswerResponse, args=(responseJSON, ))
@@ -499,8 +505,10 @@ class Client():
         self.gui.mainScreen.questionPrompt.categoryLabel.setText(category)
         self.gui.mainScreen.questionPrompt.questionLabel.setText(question)
         self.gui.mainScreen.questionPrompt.answerLineEdit.hide()
+        self.answeredQuestions += 1
     
-    def finalJepPrompt(self, category: str, question: str) -> None:
+    def finalJepPrompt(self, category: str) -> None:
+        self.answeredQuestions = 31
         self.gui.mainScreen.questionPrompt.timerLabel.hide()
         self.gui.mainScreen.questionPrompt.categoryLabel.setText(category)
         self.gui.mainScreen.questionPrompt.questionLabel.setText("Indicate how much you want to wager!")
@@ -522,11 +530,11 @@ class Client():
         else:
             self.gui.mainScreen.questionPrompt.readyToAnswer = False
     
-    def finalJeopardy(self):
-        msgJSON = {
-            TKN.TKN:TKN.FINAL_JEOPARDY,
-        }
-        self.client.send(msgJSON, False)
+    #def finalJeopardy(self):
+    #    msgJSON = {
+    #        TKN.TKN:TKN.FINAL_JEOPARDY,
+    #    }
+    #    self.client.send(msgJSON, False)
 
     def handleAnswerResponse(self, responseJSON: dict) -> None:
         self.gui.mainScreen.questionPrompt.answerTimerThread.terminate()
@@ -537,7 +545,6 @@ class Client():
                 self.gui.interfaceUpdateThread.setPlayerCardChoosingNum(responseJSON[KEY.CURRENT_PLAYER_TURN])
                 if responseJSON[KEY.PLAYER_NUM] == VAL.NON_PLAYER:
                     self.gui.mainScreen.questionPrompt.guessTimerThread.terminate()
-                self.answeredQuestions += 1
         else:
             self.gui.interfaceUpdateThread.setAnswerLineEditColor("#FF0000")
             self.gui.mainScreen.questionPrompt.guessTimerThread.start()
@@ -551,8 +558,12 @@ class Client():
             self.gui.mainScreen.questionPrompt.readyToAnswer = True
         self.gui.interfaceUpdateThread.clearAnswerLineEdit()
         #self.gui.mainScreen.questionPrompt.placeholderText.setText("You have already guessed!")
-        if self.answeredQuestions == 30:
-            self.finalJeopardy()
+        # If all 30 questions have been answered show the final jeopardy wager screen
+        if self.answeredQuestions == 30 and responseJSON[KEY.STATUS]:
+            time.sleep(4)
+            #print("ALL QUESTIONS DONE")
+            self.finalJepPrompt("Final Jeopardy")
+            self.gui.mainScreen.promptThread.start()
 
     def trimCategory(self, category: str, maxLength: int) -> str:
         if len(category) <= maxLength:
