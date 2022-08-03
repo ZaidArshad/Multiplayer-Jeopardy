@@ -315,10 +315,11 @@ class Server():
             rightAnswer = rightAnswer[3:len(rightAnswer)]
             
         # Removing player's punctuation
-        delimiterSettings = ";", "," , "-", "_", ";"
+        delimiterSettings = ";", "," , "-", "_", ";", '"', "(", ")"
         delimiter = '|'.join(map(re.escape, delimiterSettings))
         tmpAnswer = re.split(delimiter, playAnswer)
         playerAnswerWithoutPunctuation = self.listToString(tmpAnswer, False)
+        playerAnswerWithoutPunctuation = playerAnswerWithoutPunctuation.strip()
         
         tmpAnswer = playAnswer.split(",")
         playerAnswerWithoutComma = self.listToString(tmpAnswer, True)
@@ -339,10 +340,11 @@ class Server():
         else:
             correctAnswerWithoutING = rightAnswer
         
-        delimiterSettings = ";", "," , "-", "_", ";",'"'
+        delimiterSettings = ";", "," , "-", "_", ";",'"', "(", ")"
         delimiter = '|'.join(map(re.escape, delimiterSettings))
         tmpAnswer = re.split(delimiter, rightAnswer)
         correctAnswerWithoutPunctuation = self.listToString(tmpAnswer, False)
+        correctAnswerWithoutPunctuation = correctAnswerWithoutPunctuation.strip()
         
         tmpAnswer = rightAnswer.split(",")
         correctAnswerWithoutComma = self.listToString(tmpAnswer, True)
