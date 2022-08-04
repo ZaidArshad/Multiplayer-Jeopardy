@@ -35,7 +35,6 @@ class Server():
         self.currentQuestion = {}
         self.currentQuestionValue = 0
         self.buzzedInPlayerNum = VAL.NON_PLAYER
-        self.finalJepQuestion = ""
 
     # Binds the server to the given address and start threading
     def start(self) -> None:
@@ -46,11 +45,6 @@ class Server():
         data = json.load(file)
         game_number = random.randint(1,375)
         chosenData = [x for x in data if x["game_number"]==game_number]
-        finalJepID = random.randint(1,74)
-        for x in data:
-            if x["category_number"]==finalJepID:
-                self.finalJepQuestion = x
-                break
         file.close()
 
         #Creating the 2D array of questions
@@ -139,18 +133,6 @@ class Server():
                 self.currentQuestion = questionJSON
                 self.currentQuestionValue = (msgJSON[KEY.ROW]+1)*200
                 self.resetGuessBool()
-            
-            #Sends the final jeopardy question to all clients
-            if token == TKN.FINAL_JEOPARDY: #MIGHT BE UNUSED DELETE IF NOT USED, ALSO DELETE STUFF IN ANSWER RESPONSE ctrl f wager to find
-                questionJSON = {
-                    TKN.TKN:TKN.FINAL_JEOPARDY,
-                    KEY.QUESTION:self.finalJepQuestion["question"],
-                    KEY.ANSWER:self.finalJepQuestion["answer"]
-                }
-                self.broadcast(json.dumps(questionJSON))
-                self.currentQuestion = questionJSON
-                self.currentQuestionValue = 1
-                self.resetGuessBool()
 
             if token == TKN.PLAYER_ANSWER:
                 self.answerRespond(msgJSON)
@@ -203,13 +185,6 @@ class Server():
         time.sleep(4)
         self.noGuess(msg)
 
-    #def changeTurn(self, player_num:int):
-    #    msgJSON = {
-    #            TKN.TKN:TKN.PLAYER_TURN,
-    #            KEY.CURRENT_PLAYER_TURN:player_num,
-    #        }
-    #    self.broadcast(json.dumps(msgJSON))
-
     def anyPlayersLeft(self):
         playersLeft = False
         for player in self.players:
@@ -217,18 +192,9 @@ class Server():
                 playersLeft = True
         return playersLeft
     
-    def setWagerAmount(self, answer: dict):
-        for player in self.players:
-            if player.num == answer[KEY.PLAYER_NUM]:
-                player.wagerAmount = answer[KEY.ANSWER]
-                #print("SET THE WAGER AMOUNT")
 
     def answerRespond(self, answer: dict):
         playerNum = answer[KEY.PLAYER_NUM]
-        if answer[KEY.WAGER_VALUE]:
-            #print(answer[KEY.WAGER_VALUE])
-            self.setWagerAmount(answer)
-            return
         msgJSON = {}
         if (self.isCorrect(answer[KEY.ANSWER], self.currentQuestion[KEY.QUESTION])):
             self.players[playerNum].score += self.currentQuestionValue
@@ -242,7 +208,6 @@ class Server():
                 KEY.CURRENT_PLAYER_TURN:playerNum
             }
             self.broadcast(json.dumps(msgJSON))
-            #self.changeTurn(playerNum)
         else:
             self.players[playerNum].score -= self.currentQuestionValue
             msgJSON = {

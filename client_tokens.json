@@ -17,8 +17,7 @@
         "send_type": "client",
         "player_num": 0,
         "player_name": "Temp Name",
-        "answer": "temp name",
-        "wager_value":false
+        "answer": "temp name"
     },
     {
         "token": "player_buzz",

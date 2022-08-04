@@ -81,12 +81,7 @@ class GUI():
             TKN.TKN:TKN.PLAYER_ANSWER,
             KEY.ANSWER:answer,
             KEY.CURRENT_PLAYER_TURN:self.mainScreen.gui.client.turn,
-            KEY.WAGER_VALUE:False
         }
-        if self.client.answeredQuestions == 31: #If the user inputted their wager
-            y = {KEY.WAGER_VALUE:True}
-            answerJSON.update(y)
-            self.client.answeredQuestions += 1
         self.client.send(answerJSON, True)
 
     def submitToken(self, token: str) -> None:
@@ -430,10 +425,6 @@ class Client():
                 responseJson = self.receive()
                 self.gui.updatePlayers(responseJson)
 
-                #Gives the first player to join the choice to choose a question
-                #if self.playerNum == 0:
-                #    self.turn = True
-
                 # Starts the thread for listening to the server
                 self.connected = True
                 listeningThread = threading.Thread(target=self.listeningThread)
@@ -483,11 +474,6 @@ class Client():
                 self.gui.mainScreen.questionPrompt.buzzTimerThread.timeLength = 5
                 self.gui.mainScreen.questionPrompt.buzzTimerThread.start()
             
-            # USE TO RECEIVE THE ACTUAL FINAL JEOPARDY QUESTION
-            #elif token == TKN.FINAL_JEOPARDY:
-            #    self.finalJepPrompt("Final Jeopardy", responseJSON[KEY.ANSWER])
-            #    self.gui.mainScreen.promptThread.start()
-
             elif token == TKN.GAME_OVER:
                 self.gameOverScreen(responseJSON)
                 self.gui.mainScreen.promptThread.start()
@@ -504,15 +490,6 @@ class Client():
                 self.gui.mainScreen.questionPrompt.answerLineEditThread.status = False
                 self.gui.mainScreen.questionPrompt.answerLineEditThread.start()
 
-            #elif token == TKN.PLAYER_TURN:
-            #    if self.playerNum == responseJSON[KEY.CURRENT_PLAYER_TURN]:
-            #        self.turn = True
-            #    else:
-            #        self.turn = False
-
-            #TEMPORARY FIX FOR CRASHING OF RECEIVING PLAYER_TURN AND ANSWER_RESPONSE TOO QUICKLY
-            #time.sleep(2)
-
     def initializePrompt(self, category: str, question: str) -> None:
         self.gui.mainScreen.questionPrompt.timerLabel.show()
         self.gui.mainScreen.questionPrompt.categoryLabel.setText(category)
@@ -521,7 +498,6 @@ class Client():
         self.answeredQuestions += 1
     
     def gameOverScreen(self, responseJSON: dict) -> None:
-        #self.answeredQuestions = 31
         self.gui.mainScreen.questionPrompt.timerLabel.hide()
         self.gui.mainScreen.questionPrompt.categoryLabel.setText("GAME OVER")
         winnerPlayerNum = responseJSON[KEY.PLAYER_NUM]
@@ -548,12 +524,6 @@ class Client():
             self.gui.mainScreen.questionPrompt.answerLineEditThread.start()
         else:
             self.gui.mainScreen.questionPrompt.readyToAnswer = False
-    
-    #def finalJeopardy(self):
-    #    msgJSON = {
-    #        TKN.TKN:TKN.FINAL_JEOPARDY,
-    #    }
-    #    self.client.send(msgJSON, False)
 
     def handleAnswerResponse(self, responseJSON: dict) -> None:
         self.gui.mainScreen.questionPrompt.answerTimerThread.terminate()
@@ -576,12 +546,11 @@ class Client():
         else:
             self.gui.mainScreen.questionPrompt.readyToAnswer = True
         self.gui.interfaceUpdateThread.clearAnswerLineEdit()
-        #self.gui.mainScreen.questionPrompt.placeholderText.setText("You have already guessed!")
-        # If all 30 questions have been answered show the final jeopardy wager screen
+
+        # If all 30 questions have been answered show the game over screen
         if self.answeredQuestions == 30 and responseJSON[KEY.STATUS]:
             if self.playerNum == responseJSON[KEY.PLAYER_NUM] or (responseJSON[KEY.PLAYER_NUM] == VAL.NON_PLAYER and self.playerNum == 0):
                 time.sleep(4)
-                #print("ALL QUESTIONS DONE")
                 self.send({TKN.TKN:TKN.GAME_OVER})
 
     def trimCategory(self, category: str, maxLength: int) -> str:

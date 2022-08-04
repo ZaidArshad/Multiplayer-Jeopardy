@@ -40,9 +40,7 @@ GUESS_TIMEOUT = "guess_timeout"
 # ACK
 ACK = "ack"
 
-# Used to initiate final jeopardy after all regular questions have been answered
-FINAL_JEOPARDY = "final_jeopardy"
-
+# Used to initiate game over after all regular questions have been answered
 GAME_OVER = "game_over"
 
 # Unused
@@ -50,3 +48,4 @@ GAME_OVER = "game_over"
 PLAYER_TURN = "player_turn"
 LINE_EDIT_UPDATE = "line_edit_update"
 BUZZ_TIME_OVER = "buzz_time_over"
+FINAL_JEOPARDY = "final_jeopardy"
