@@ -191,6 +191,7 @@ class MainScreen(QDialog):
         self.promptThread = PromptThread()
         self.promptThread.togglePromptSignal.connect(self.togglePrompt)
 
+        self.debugLabel.hide()
         self.debugLabel.setText("THIS IS DEBUG LOG PRESS ESCAPE TO SHOW AND HIDE")
         self.playerCards = [
             PlayerCard(self,  21, 520, "#FF4B4B"),
@@ -396,7 +397,7 @@ class Client():
         self.connected = False
         self.categories = []
         self.turn = 0
-        self.answeredQuestions = 0
+        self.answeredQuestions = 0 #Change number to make the game end sooner (default ends after 30 questions)
 
     # Connects to the server, prints confirmation
     def connect(self, address: tuple[str, int], playerName: str) -> None:
@@ -479,6 +480,10 @@ class Client():
             #    self.finalJepPrompt("Final Jeopardy", responseJSON[KEY.ANSWER])
             #    self.gui.mainScreen.promptThread.start()
 
+            elif token == TKN.GAME_OVER:
+                self.gameOverScreen(responseJSON)
+                self.gui.mainScreen.promptThread.start()
+
             elif token == TKN.ANSWER_RESPONSE:
                 handleThread = threading.Thread(target=self.handleAnswerResponse, args=(responseJSON, ))
                 handleThread.start()
@@ -507,14 +512,20 @@ class Client():
         self.gui.mainScreen.questionPrompt.answerLineEdit.hide()
         self.answeredQuestions += 1
     
-    def finalJepPrompt(self, category: str) -> None:
-        self.answeredQuestions = 31
+    def gameOverScreen(self, responseJSON: dict) -> None:
+        #self.answeredQuestions = 31
         self.gui.mainScreen.questionPrompt.timerLabel.hide()
-        self.gui.mainScreen.questionPrompt.categoryLabel.setText(category)
-        self.gui.mainScreen.questionPrompt.questionLabel.setText("Indicate how much you want to wager!")
-        self.gui.mainScreen.questionPrompt.readyToAnswer = True
+        self.gui.mainScreen.questionPrompt.categoryLabel.setText("GAME OVER")
+        winnerPlayerNum = responseJSON[KEY.PLAYER_NUM]
+        if self.playerNum == winnerPlayerNum:
+            self.gui.mainScreen.questionPrompt.questionLabel.setText("YOU WIN!")
+        else:
+            self.gui.mainScreen.questionPrompt.questionLabel.setText("YOU LOSE!")
+        if responseJSON[KEY.STATUS]:
+            self.gui.mainScreen.questionPrompt.questionLabel.setText("TIE GAME!")
+        self.gui.mainScreen.questionPrompt.readyToAnswer = False
         self.gui.mainScreen.questionPrompt.hasGuessed = False
-        self.gui.mainScreen.questionPrompt.answerLineEdit.show()
+        self.gui.mainScreen.questionPrompt.answerLineEdit.hide()
 
     def handleBuzz(self, responseJSON: dict):
         self.gui.animationThread.isBuzzed =  responseJSON[KEY.STATUS]
@@ -560,10 +571,10 @@ class Client():
         #self.gui.mainScreen.questionPrompt.placeholderText.setText("You have already guessed!")
         # If all 30 questions have been answered show the final jeopardy wager screen
         if self.answeredQuestions == 30 and responseJSON[KEY.STATUS]:
-            time.sleep(4)
-            #print("ALL QUESTIONS DONE")
-            self.finalJepPrompt("Final Jeopardy")
-            self.gui.mainScreen.promptThread.start()
+            if self.playerNum == responseJSON[KEY.PLAYER_NUM] or (responseJSON[KEY.PLAYER_NUM] == VAL.NON_PLAYER and self.playerNum == 0):
+                time.sleep(4)
+                #print("ALL QUESTIONS DONE")
+                self.send({TKN.TKN:TKN.GAME_OVER})
 
     def trimCategory(self, category: str, maxLength: int) -> str:
         if len(category) <= maxLength:

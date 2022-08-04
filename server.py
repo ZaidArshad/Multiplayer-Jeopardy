@@ -123,6 +123,9 @@ class Server():
                 self.sendPlayerInfo()
                 connected = False
             
+            if token == TKN.GAME_OVER:
+                self.gameOverResponse()
+            
             #Sends the chosen question to all clients
             if token == TKN.PLAYER_QUESTION_SELECT:
                 questionJSON = {
@@ -138,7 +141,7 @@ class Server():
                 self.resetGuessBool()
             
             #Sends the final jeopardy question to all clients
-            if token == TKN.FINAL_JEOPARDY:
+            if token == TKN.FINAL_JEOPARDY: #MIGHT BE UNUSED DELETE IF NOT USED, ALSO DELETE STUFF IN ANSWER RESPONSE ctrl f wager to find
                 questionJSON = {
                     TKN.TKN:TKN.FINAL_JEOPARDY,
                     KEY.QUESTION:self.finalJepQuestion["question"],
@@ -389,6 +392,24 @@ class Server():
     def resetGuessBool(self):
         for player in self.players:
             player.hasGuessed = False
+
+    def gameOverResponse(self):
+        winnerPlayerNum = 0
+        highestScore = -9999
+        tieGame = False
+        for player in self.players:
+            if player.score == highestScore:
+                tieGame = True
+            if player.score > highestScore:
+                highestScore = player.score
+                winnerPlayerNum = player.num
+        msgJSON = {}
+        msgJSON = {
+                TKN.TKN:TKN.GAME_OVER,
+                KEY.PLAYER_NUM:winnerPlayerNum,
+                KEY.STATUS:tieGame
+            }
+        self.broadcast(json.dumps(msgJSON))
         
 if __name__ == "__main__":
     server = Server()

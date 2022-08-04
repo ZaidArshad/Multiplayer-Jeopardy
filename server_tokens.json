@@ -74,5 +74,11 @@
         "row": 0,
         "col": 0,
         "current_player_turn": 0
+    },
+    {
+        "token": "game_over",
+        "send_type": "broadcast",
+        "player_num": 0,
+        "status":false
     }
 ]

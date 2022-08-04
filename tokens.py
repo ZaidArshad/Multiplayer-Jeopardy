@@ -43,6 +43,8 @@ ACK = "ack"
 # Used to initiate final jeopardy after all regular questions have been answered
 FINAL_JEOPARDY = "final_jeopardy"
 
+GAME_OVER = "game_over"
+
 # Unused
 
 PLAYER_TURN = "player_turn"
