@@ -55,12 +55,20 @@ class GUI():
             self.mainScreen.questionPrompt.resetLineEdit)
         self.interfaceUpdateThread.playerCardChoosingSignal.connect(
             self.mainScreen.lockInPlayer)
+        self.interfaceUpdateThread.promptUpdateSignal.connect(self.initializePrompt)
 
     def buzzPlayer(self, playerNum: int) -> None:
         self.mainScreen.playerCards[playerNum].buzzedIn()
     
     def unBuzzPlayer(self, playerNum: int) -> None:
         self.mainScreen.playerCards[playerNum].buzzedOut()
+
+    def initializePrompt(self, category: str, question: str) -> None:
+        self.mainScreen.questionPrompt.timerLabel.show()
+        self.mainScreen.questionPrompt.categoryLabel.setText(category)
+        self.mainScreen.questionPrompt.questionLabel.setText(question)
+        self.mainScreen.questionPrompt.answerLineEdit.hide()
+        self.client.answeredQuestions += 1
 
     # Goes to the main screen
     def goToMainScreen(self) -> None:
@@ -449,7 +457,7 @@ class Client():
     def listeningThread(self) -> None:
         while self.connected:
             responseJSON = self.receive()
-            gui.mainScreen.debugLabel.setText(json.dumps(responseJSON)+"\n"+gui.mainScreen.debugLabel.text())
+            #gui.mainScreen.debugLabel.setText(json.dumps(responseJSON)+"\n"+gui.mainScreen.debugLabel.text())
 
             token = responseJSON[TKN.TKN]
 
@@ -468,7 +476,7 @@ class Client():
                 self.assignCategories(self.categories.copy())
             
             elif token == TKN.SERVER_QUESTION_SELECT:
-                self.initializePrompt(self.categories[responseJSON[KEY.COL]], responseJSON[KEY.ANSWER])
+                self.gui.interfaceUpdateThread.setPromptUpdate(self.categories[responseJSON[KEY.COL]], responseJSON[KEY.ANSWER])
                 self.gui.mainScreen.promptThread.start()
                 
                 #Start the timer to allow time for the players to read the question
@@ -662,7 +670,7 @@ class TimerThread(QThread):
         self.finishedSignal.emit()
 
 class InterfaceUpdateThread(QThread):
-    INTERFACE_OBJECTS = 5
+    INTERFACE_OBJECTS = 6
     update = [False]*INTERFACE_OBJECTS
 
     answerLineEditTextSignal = pyqtSignal(str)
@@ -679,6 +687,10 @@ class InterfaceUpdateThread(QThread):
     playerCardChoosingSignal = pyqtSignal(int)
     playerCardChoosingNum = VAL.NON_PLAYER
 
+    promptUpdateSignal = pyqtSignal(str, str)
+    promptUpdateCategory = ""
+    promptUpdateQuestion = ""
+
     def run(self):
         if self.update[0]:
             self.answerLineEditTextSignal.emit(self.answerLineEditText)
@@ -694,6 +706,9 @@ class InterfaceUpdateThread(QThread):
 
         if self.update[4]:
             self.playerCardChoosingSignal.emit(self.playerCardChoosingNum)
+        
+        if self.update[5]:
+            self.promptUpdateSignal.emit(self.promptUpdateCategory, self.promptUpdateQuestion)
 
         self.update = [False]*self.INTERFACE_OBJECTS
 
@@ -719,6 +734,12 @@ class InterfaceUpdateThread(QThread):
     def setPlayerCardChoosingNum(self, num: int):
         self.update[4] = True
         self.playerCardChoosingNum = num
+        self.start()
+
+    def setPromptUpdate(self, category: str, question: str):
+        self.update[5] = True
+        self.promptUpdateCategory = category
+        self.promptUpdateQuestion = question
         self.start()
 
 if __name__ == "__main__":

@@ -38,8 +38,8 @@ class Server():
         self.finalJepQuestion = ""
 
     # Binds the server to the given address and start threading
-    def start(self, address: tuple[str, int]) -> None:
-        self.socket.bind(address)
+    def start(self) -> None:
+        self.socket.bind(("", VAL.PORT))
         
         #Choose the categories and questions from the jeopardy data
         file = open("jeopardy database.json",encoding="utf8")
@@ -413,5 +413,5 @@ class Server():
         
 if __name__ == "__main__":
     server = Server()
-    server.start(VAL.ADDRESS)
+    server.start()
     
