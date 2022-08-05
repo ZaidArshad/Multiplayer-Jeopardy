@@ -276,10 +276,10 @@ class Server():
         else:
             answerWithoutING = playAnswer
             
-        # Remove "to"
-        if (playAnswer[0:3] == "to "):
+        # Remove "to" and "an"
+        if (playAnswer[0:3] == "to ") or (playAnswer[0:3] == "an "):
             playAnswer = playAnswer[3:len(playAnswer)]
-        if (rightAnswer[0:3] == "to "):
+        if (rightAnswer[0:3] == "to ") or (rightAnswer[0:3] == "an "):
             rightAnswer = rightAnswer[3:len(rightAnswer)]
             
         # Removing player's punctuation
