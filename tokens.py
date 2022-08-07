@@ -44,7 +44,6 @@ ACK = "ack"
 GAME_OVER = "game_over"
 
 # Unused
-
 PLAYER_TURN = "player_turn"
 LINE_EDIT_UPDATE = "line_edit_update"
 BUZZ_TIME_OVER = "buzz_time_over"

@@ -17,7 +17,7 @@
         "send_type": "client",
         "player_num": 0,
         "player_name": "Temp Name",
-        "answer": "temp name"
+        "answer": "some answer"
     },
     {
         "token": "player_buzz",
