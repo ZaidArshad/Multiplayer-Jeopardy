@@ -45,6 +45,7 @@ class GUI():
         self.animationThread.buzzSignal.connect(self.buzzPlayer)
         self.animationThread.unBuzzSignal.connect(self.unBuzzPlayer)
 
+        # Connecting functions to signals
         self.interfaceUpdateThread = InterfaceUpdateThread()
         self.interfaceUpdateThread.answerLineEditTextSignal.connect(
             self.mainScreen.questionPrompt.answerLineEdit.setText)
@@ -57,12 +58,15 @@ class GUI():
             self.mainScreen.lockInPlayer)
         self.interfaceUpdateThread.promptUpdateSignal.connect(self.initializePrompt)
 
+    # Buzzes the player through the GUI
     def buzzPlayer(self, playerNum: int) -> None:
         self.mainScreen.playerCards[playerNum].buzzedIn()
     
+    # Unbuzzes the player through the GUI  
     def unBuzzPlayer(self, playerNum: int) -> None:
         self.mainScreen.playerCards[playerNum].buzzedOut()
 
+    # Fills in the data for the question prompt
     def initializePrompt(self, category: str, question: str, value: int) -> None:
         self.mainScreen.questionPrompt.timerLabel.show()
         self.mainScreen.questionPrompt.valueLabel.setText("$" + str(value*200))
@@ -85,9 +89,11 @@ class GUI():
         }
         self.client.send(answerJSON, True)
 
+    # Easily send a message that only contains a token 
     def submitToken(self, token: str) -> None:
         self.client.send({TKN.TKN:token})
 
+    # Tells the server which question has been chosen
     def chooseQuestion(self, row: int, col: int) -> None:
         # if its not your turn, do not allow question selection
         if self.client.turn != self.client.playerNum:
@@ -205,12 +211,14 @@ class MainScreen(QDialog):
         self.playerCards[1].greyOut()
         self.playerCards[2].greyOut()
 
+    # Color in a player and grey out other players
     def lockInPlayer(self, playerNum: int) -> None:
         self.playerCards[playerNum].colorIn()
         for i in range(len(self.playerCards)):
             if i != playerNum:
                 self.playerCards[i].greyOut()
     
+    # Colors in all players
     def colorPlayers(self) -> None:
         for player in self.playerCards:
             player.colorIn()
@@ -260,9 +268,11 @@ class QuestionPrompt(QWidget):
 
         self.setFocusPolicy(Qt.StrongFocus)
 
+    # Updates the timer on the GUI
     def updateTimer(self, time: int) -> None:
         self.timerLabel.setText(str(time))
     
+    # Disables guessing for all players
     def terminateGuessing(self) -> None:
         if self.mainScreen.gui.client.playerNum == 0 and self.readyToAnswer:
             msgJSON = {
@@ -272,6 +282,7 @@ class QuestionPrompt(QWidget):
             self.mainScreen.gui.client.send(msgJSON)
         self.readyToAnswer = False
 
+    # Starts the timer, shows the textbox and allows players to buzz
     def enableGuessing(self):
         self.guessTimerThread.timeLength = 15
         self.guessTimerThread.start()
@@ -279,25 +290,30 @@ class QuestionPrompt(QWidget):
         self.readyToAnswer = True
         self.hasGuessed = False
 
+    # Sets the color of the textbox
     def setLineEditColor(self, color: str) -> None:
         self.setStyleSheet("QLineEdit {"
         "   background-color:"+ color +";"
         "}")
 
+    # Clears the line edit and sets it white
     def resetLineEdit(self) -> None:
         self.setLineEditColor("#FFFFFF")
         self.answerLineEdit.clear()
 
+    # Sends the server message of buzzing in
     def buzzed(self, status: bool) -> None:
         self.mainScreen.gui.client.send({
             TKN.TKN:TKN.PLAYER_BUZZ,
             KEY.STATUS:status
         }, True)
 
+    # Allows the user to type in the text box
     def enableAnswerLineEdit(self, status: bool) -> None:
         self.isBuzzed = status
         self.answerLineEdit.setEnabled(status)
 
+    # Submits the player's answer and disables guessing
     def answer(self):
         if self.isBuzzed and self.readyToAnswer:
             self.buzzed(False)
@@ -323,6 +339,7 @@ class Board(QWidget):
         self.mainScreen = mainscreen
         self.buttons = [[0 for i in range(5)] for j in range(6)]
 
+        # Initializing the buttons
         for col in range(6):
             for row in range(5):
                 button = QPushButton()
@@ -361,13 +378,16 @@ class PlayerCard():
         layout.addWidget(self.widget.scoreLabel, 0, Qt.AlignmentFlag.AlignCenter)
         layout.addItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
 
+    # Clears the name and score
     def clear(self) -> None:
         self.widget.nameLabel.clear()
         self.widget.scoreLabel.clear()
 
+    # Greys the player card
     def greyOut(self) -> None:
         self.setColor("#7D7D7D")
 
+    # Colors the player card
     def colorIn(self) -> None:
         self.setColor(self.color)
 
@@ -385,6 +405,7 @@ class PlayerCard():
         self.widget.anim.setDuration(200)
         self.widget.anim.start()
 
+    # Sets the color of the player card
     def setColor(self, color: str) -> None:
         self.widget.setStyleSheet("QWidget {"
         "   background: " + color + ";"
@@ -453,20 +474,25 @@ class Client():
 
             token = responseJSON[TKN.TKN]
 
+            # Updates the player cards with the server data
             if token == TKN.PLAYER_UPDATE:
                 self.gui.interfaceUpdateThread.setPlayerCardData(responseJSON)
 
+            # Disconnects this client
             elif token == TKN.CLIENT_CLOSED and self.playerNum == responseJSON[KEY.PLAYER_NUM]:
                 self.connected = False
 
+            # Handles a player buzzing in
             elif token == TKN.PLAYER_BUZZ:
                 handleThread = threading.Thread(target=self.handleBuzz, args=(responseJSON, ))
                 handleThread.start()
             
+            # Updates the GUI with the categories from the server
             elif token == TKN.SERVER_CATEGORY:
                 self.categories = responseJSON[KEY.CATEGORIES]
                 self.assignCategories(self.categories.copy())
             
+            # Updates the question prompt with the server data
             elif token == TKN.SERVER_QUESTION_SELECT:
                 self.gui.interfaceUpdateThread.setPromptUpdate(self.categories[responseJSON[KEY.COL]], responseJSON[KEY.ANSWER], responseJSON[KEY.ROW]+1)
                 self.gui.mainScreen.promptThread.start()
@@ -475,10 +501,12 @@ class Client():
                 self.gui.mainScreen.questionPrompt.buzzTimerThread.timeLength = 5
                 self.gui.mainScreen.questionPrompt.buzzTimerThread.start()
             
+            # Ends the game
             elif token == TKN.GAME_OVER:
                 self.gameOverScreen(responseJSON)
                 self.gui.mainScreen.promptThread.start()
 
+            # Updates based on the correctness of the player's answer
             elif token == TKN.ANSWER_RESPONSE:
                 handleThread = threading.Thread(target=self.handleAnswerResponse, args=(responseJSON, ))
                 handleThread.start()
@@ -486,11 +514,13 @@ class Client():
                 self.gui.mainScreen.questionPrompt.answerLineEditThread.status = False
                 self.gui.mainScreen.questionPrompt.answerLineEditThread.start()
 
+            # Shows the players answer on all clients
             elif token == TKN.PLAYER_ANSWER:
                 self.gui.interfaceUpdateThread.setAnswerLineEditText(responseJSON[KEY.ANSWER])
                 self.gui.mainScreen.questionPrompt.answerLineEditThread.status = False
                 self.gui.mainScreen.questionPrompt.answerLineEditThread.start()
 
+    # Fills in the data for the question prompt
     def initializePrompt(self, category: str, question: str) -> None:
         self.gui.mainScreen.questionPrompt.timerLabel.show()
         self.gui.mainScreen.questionPrompt.categoryLabel.setText(category)
@@ -498,6 +528,7 @@ class Client():
         self.gui.mainScreen.questionPrompt.answerLineEdit.hide()
         self.answeredQuestions += 1
     
+    # Shows the game over screen
     def gameOverScreen(self, responseJSON: dict) -> None:
         self.gui.mainScreen.questionPrompt.timerLabel.hide()
         self.gui.mainScreen.questionPrompt.categoryLabel.setText("GAME OVER")
@@ -512,6 +543,7 @@ class Client():
         self.gui.mainScreen.questionPrompt.hasGuessed = False
         self.gui.mainScreen.questionPrompt.answerLineEdit.hide()
 
+    # Verifies a valid buzz
     def handleBuzz(self, responseJSON: dict):
         self.gui.animationThread.isBuzzed =  responseJSON[KEY.STATUS]
         self.gui.animationThread.playerNum = responseJSON[KEY.PLAYER_NUM]
@@ -526,6 +558,7 @@ class Client():
         else:
             self.gui.mainScreen.questionPrompt.readyToAnswer = False
 
+    # Updates based on the correctness of the player's answer
     def handleAnswerResponse(self, responseJSON: dict) -> None:
         self.gui.mainScreen.questionPrompt.answerTimerThread.terminate()
         if responseJSON[KEY.STATUS]:
@@ -554,6 +587,7 @@ class Client():
                 time.sleep(4)
                 self.send({TKN.TKN:TKN.GAME_OVER})
 
+    # Formats the category text to split on separate lines if too long
     def trimCategory(self, category: str, maxLength: int) -> str:
         if len(category) <= maxLength:
             return category
@@ -570,7 +604,7 @@ class Client():
         return category
 
 
-    
+    # Fills in the GUI with the categories
     def assignCategories(self, categories: list) -> None:
         for i in range(len(categories)):
             categories[i] = self.trimCategory(categories[i], 13)
@@ -598,7 +632,7 @@ class Client():
         msgJson = json.dumps(msg)
         self.socket.send(msgJson.encode())
 
-# Thread that is to be used for widget animation
+### GUI SIGNALS ###
 class AnimationThread(QThread):
     playerNum = -1
     isBuzzed = False
@@ -713,6 +747,7 @@ class InterfaceUpdateThread(QThread):
         self.promptUpdateQuestion = question
         self.promptValue = value
         self.start()
+### GUI SIGNALS END ###
 
 if __name__ == "__main__":
     gui = GUI()
