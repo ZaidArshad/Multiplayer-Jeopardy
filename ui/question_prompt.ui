@@ -92,6 +92,40 @@ QLineEdit {
         <property name="orientation">
          <enum>Qt::Vertical</enum>
         </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Fixed</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QLabel" name="valueLabel">
+        <property name="styleSheet">
+         <string notr="true">QLabel {
+	font-family: 'CantoraOne';
+	font-size: 25px;
+	text-align: center;
+	font-weight: 400;
+}</string>
+        </property>
+        <property name="text">
+         <string>$500</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="verticalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
         <property name="sizeHint" stdset="0">
          <size>
           <width>20</width>

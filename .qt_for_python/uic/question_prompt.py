@@ -60,8 +60,20 @@ class Ui_Form(object):
         self.verticalLayout = QtWidgets.QVBoxLayout(self.verticalWidget)
         self.verticalLayout.setContentsMargins(15, -1, 15, -1)
         self.verticalLayout.setObjectName("verticalLayout")
-        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
+        spacerItem = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Fixed)
         self.verticalLayout.addItem(spacerItem)
+        self.valueLabel = QtWidgets.QLabel(self.verticalWidget)
+        self.valueLabel.setStyleSheet("QLabel {\n"
+"    font-family: \'CantoraOne\';\n"
+"    font-size: 25px;\n"
+"    text-align: center;\n"
+"    font-weight: 400;\n"
+"}")
+        self.valueLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.valueLabel.setObjectName("valueLabel")
+        self.verticalLayout.addWidget(self.valueLabel)
+        spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
+        self.verticalLayout.addItem(spacerItem1)
         self.questionLabel = QtWidgets.QLabel(self.verticalWidget)
         self.questionLabel.setStyleSheet("QLabel {\n"
 "    font-family: \'CantoraOne\';\n"
@@ -73,8 +85,8 @@ class Ui_Form(object):
         self.questionLabel.setWordWrap(True)
         self.questionLabel.setObjectName("questionLabel")
         self.verticalLayout.addWidget(self.questionLabel)
-        spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
-        self.verticalLayout.addItem(spacerItem1)
+        spacerItem2 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
+        self.verticalLayout.addItem(spacerItem2)
         self.timerLabel = QtWidgets.QLabel(self.verticalWidget)
         self.timerLabel.setStyleSheet("QLabel {\n"
 "    font-family: \'Lato\';\n"
@@ -97,8 +109,8 @@ class Ui_Form(object):
 "}")
         self.answerLineEdit.setObjectName("answerLineEdit")
         self.verticalLayout_2.addWidget(self.answerLineEdit)
-        spacerItem2 = QtWidgets.QSpacerItem(20, 23, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Fixed)
-        self.verticalLayout_2.addItem(spacerItem2)
+        spacerItem3 = QtWidgets.QSpacerItem(20, 23, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Fixed)
+        self.verticalLayout_2.addItem(spacerItem3)
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -107,6 +119,7 @@ class Ui_Form(object):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
         self.categoryLabel.setText(_translate("Form", "NEWS TO ME"))
+        self.valueLabel.setText(_translate("Form", "$500"))
         self.questionLabel.setText(_translate("Form", "A 7.0 magnitude earthquake in this Caribbean country Jan. 12, 2010 brought a world outpouring of aid"))
         self.timerLabel.setText(_translate("Form", "5"))
         self.answerLineEdit.setPlaceholderText(_translate("Form", "What is: "))

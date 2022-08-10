@@ -63,8 +63,9 @@ class GUI():
     def unBuzzPlayer(self, playerNum: int) -> None:
         self.mainScreen.playerCards[playerNum].buzzedOut()
 
-    def initializePrompt(self, category: str, question: str) -> None:
+    def initializePrompt(self, category: str, question: str, value: int) -> None:
         self.mainScreen.questionPrompt.timerLabel.show()
+        self.mainScreen.questionPrompt.valueLabel.setText("$" + str(value*200))
         self.mainScreen.questionPrompt.categoryLabel.setText(category)
         self.mainScreen.questionPrompt.questionLabel.setText(question)
         self.mainScreen.questionPrompt.answerLineEdit.hide()
@@ -467,7 +468,7 @@ class Client():
                 self.assignCategories(self.categories.copy())
             
             elif token == TKN.SERVER_QUESTION_SELECT:
-                self.gui.interfaceUpdateThread.setPromptUpdate(self.categories[responseJSON[KEY.COL]], responseJSON[KEY.ANSWER])
+                self.gui.interfaceUpdateThread.setPromptUpdate(self.categories[responseJSON[KEY.COL]], responseJSON[KEY.ANSWER], responseJSON[KEY.ROW]+1)
                 self.gui.mainScreen.promptThread.start()
                 
                 #Start the timer to allow time for the players to read the question
@@ -656,9 +657,10 @@ class InterfaceUpdateThread(QThread):
     playerCardChoosingSignal = pyqtSignal(int)
     playerCardChoosingNum = VAL.NON_PLAYER
 
-    promptUpdateSignal = pyqtSignal(str, str)
+    promptUpdateSignal = pyqtSignal(str, str, int)
     promptUpdateCategory = ""
     promptUpdateQuestion = ""
+    promptValue = 0
 
     def run(self):
         if self.update[0]:
@@ -677,7 +679,7 @@ class InterfaceUpdateThread(QThread):
             self.playerCardChoosingSignal.emit(self.playerCardChoosingNum)
         
         if self.update[5]:
-            self.promptUpdateSignal.emit(self.promptUpdateCategory, self.promptUpdateQuestion)
+            self.promptUpdateSignal.emit(self.promptUpdateCategory, self.promptUpdateQuestion, self.promptValue)
 
         self.update = [False]*self.INTERFACE_OBJECTS
 
@@ -705,10 +707,11 @@ class InterfaceUpdateThread(QThread):
         self.playerCardChoosingNum = num
         self.start()
 
-    def setPromptUpdate(self, category: str, question: str):
+    def setPromptUpdate(self, category: str, question: str, value: int):
         self.update[5] = True
         self.promptUpdateCategory = category
         self.promptUpdateQuestion = question
+        self.promptValue = value
         self.start()
 
 if __name__ == "__main__":
