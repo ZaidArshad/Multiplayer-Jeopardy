@@ -18,7 +18,6 @@ import keys as KEY
 
 #To generate a random game
 import random
-
 import time
 
 print("TCP Server")
@@ -27,27 +26,34 @@ BUFFER = 1024
 class Server():
     def __init__(self) -> None:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        #players variable contains all player data in a player object from player.py
         self.players = []
         self.threads = [threading.Thread]
         self.bufferLength = BUFFER
+        #Game Content: gameData contains all chosen questions for the game
         self.gameData = [[0 for i in range(5)] for j in range(6)]
+        #Game Content: categories contain all categories for the questions for the game
         self.categories = []
+        #currentQuestion is used for figuring out what question was completed and relaying it to the clients
         self.currentQuestion = {}
+        #currentQuestionValue is used to update player score in players[player_num}.score
         self.currentQuestionValue = 0
+        #buzzedInPlayerNum is used to know which player is currently buzzed in
         self.buzzedInPlayerNum = VAL.NON_PLAYER
 
     # Binds the server to the given address and start threading
     def start(self) -> None:
         self.socket.bind(("", VAL.PORT))
         
-        #Choose the categories and questions from the jeopardy data
+        #Choose the categories and questions from the jeopardy data by generating a random number from 1 to 375 and saving only those values in the jeopardy database file
         file = open("jeopardy database.json",encoding="utf8")
         data = json.load(file)
         game_number = random.randint(1,375)
+        #chosenData is done by going through the entire jeopardy database file and finding the apropriate keys relating to the randomly generated number
         chosenData = [x for x in data if x["game_number"]==game_number]
         file.close()
 
-        #Creating the 2D array of questions
+        #Creating the 2D array of questions and saving it in gameData so it can accurately reflect the game board on the server.
         questionIndex = 0
         for category in range(6):
             self.categories.append(chosenData[questionIndex]["category"])
@@ -109,6 +115,8 @@ class Server():
             msgJSON = helper.loadJSON(response)
             token = msgJSON[TKN.TKN]
 
+#These are all the token responses for the server side that are sent by the client:
+
             # Tells all clients of a closed client
             if token == TKN.CLIENT_CLOSED:
                 self.broadcast(response.decode())
@@ -117,6 +125,7 @@ class Server():
                 self.sendPlayerInfo()
                 connected = False
             
+            #All questions have been answered, the server now calculates the winner and responds to the token
             if token == TKN.GAME_OVER:
                 self.gameOverResponse()
             
@@ -134,16 +143,21 @@ class Server():
                 self.currentQuestionValue = (msgJSON[KEY.ROW]+1)*200
                 self.resetGuessBool()
 
+            #Responds to the buzzed in players answer, and calculates if that answer is correct
             if token == TKN.PLAYER_ANSWER:
                 self.answerRespond(msgJSON)
                 isBroadcastEnabled = False
 
+            #Handles players leaving/joining/updating
             if token == TKN.PLAYER_UPDATE:
                 self.sendPlayerInfo()
 
+            #If the buzzed in player does not answer the question within the time limit, the server deligates their answer as incorrect.
             if token == TKN.GUESS_TIMEOUT:
                 self.noGuess(msgJSON)
 
+            #Handles the player buzzing feature, the player that buzzes in first within the time limit is able to answer the question when the first buzz is recieved,
+            #it locks the other clients from sending a buzz until the question is either answered incorrectly or correctly.
             if token == TKN.PLAYER_BUZZ:
                 if self.buzzedInPlayerNum != VAL.NON_PLAYER and msgJSON[KEY.STATUS]:
                     isBroadcastEnabled = False
@@ -152,11 +166,13 @@ class Server():
                 elif self.buzzedInPlayerNum == VAL.NON_PLAYER:
                     self.buzzedInPlayerNum = msgJSON[KEY.PLAYER_NUM]
 
+            #Broadcasts a message to all clients.
             if msgJSON[KEY.SEND_TYPE] == VAL.BROADCAST and isBroadcastEnabled:
                 self.broadcast(response.decode())
         
         self.listenForConnection()
 
+#Functions below are used by the response tokens as "helper" functions:
 
     # Sends to all connected clients
     def broadcast(self, msg: str) -> None:
@@ -168,6 +184,8 @@ class Server():
             msg = json.dumps(msgJSON).encode()
             player.socket.send(msg)
 
+    #Used for the TKN.GUESS_TIMEOUT token
+    #If no one guesses
     def noGuess(self, msg: dict):
         msgJSON = {}
         msgJSON = {
@@ -181,10 +199,14 @@ class Server():
             }
         self.broadcast(json.dumps(msgJSON))
     
+    #Used in answerRespond()
+    #If all players have guessed
     def noPlayersLeft(self, msg: dict):
         time.sleep(4)
         self.noGuess(msg)
 
+    #Used in answerRespond()
+    #If all players have guessed or not.
     def anyPlayersLeft(self):
         playersLeft = False
         for player in self.players:
@@ -192,7 +214,8 @@ class Server():
                 playersLeft = True
         return playersLeft
     
-
+    #Used for the TKN.PLAYER_ANSWER token
+    #When a player answers a question, it is responded by correct/incorrect and sending it to all clients and handling the flow of the game after the response
     def answerRespond(self, answer: dict):
         playerNum = answer[KEY.PLAYER_NUM]
         msgJSON = {}
@@ -221,6 +244,8 @@ class Server():
             if not self.anyPlayersLeft():
                 threading.Thread(target=self.noPlayersLeft, args=(answer, )).start()
 
+    #Used for the TKN.PLAYER_UPDATE token
+    #Updates the player data for server and all clients
     def sendPlayerInfo(self):
         msgJSON = {
             TKN.TKN:TKN.PLAYER_UPDATE,
@@ -230,6 +255,8 @@ class Server():
             msgJSON[KEY.PLAYER_LIST].append(player.getJSON())
         self.broadcast(json.dumps(msgJSON))
 
+    #Used for the TKN.CLIENT_CLOSED token
+    #If a client is closed, it updates the player numbers
     def reAssignPlayerNumbers(self):
         num = 0
         for player in self.players:
@@ -244,6 +271,8 @@ class Server():
             thread.join()
         self.socket.close()
         
+    #Used in answerRespond()
+    #Determins if the answer is correct that is calculated with some leniency
     def isCorrect(self, playerAnswer, correctAnswer) -> bool:
         playAnswer = playerAnswer.lower().strip()
         rightAnswer = correctAnswer.lower().strip()
@@ -345,6 +374,7 @@ class Server():
             return True
         return False
     
+    #Used in isCorrect()
     # Returns string with spaces in between each word
     def listToString(self, list, noSpaces: bool) -> str:
             newString = ""
@@ -354,10 +384,14 @@ class Server():
                     newString += " "
             return newString
     
+    #Used for the TKN.PLAYER_QUESTION_SELECT token
+    #When a player selects a question, it resets the guessing values that were updated in previous questions
     def resetGuessBool(self):
         for player in self.players:
             player.hasGuessed = False
 
+    #Used for the TKN.GAME_OVER token
+    #Tells the clients if they are winners or losers for displaying the final screen
     def gameOverResponse(self):
         winnerPlayerNum = 0
         highestScore = -9999
